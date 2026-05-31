@@ -1,214 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Rural RPM Nurse Output Dashboard</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rural RPM Nurse Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f7fb;
-    margin: 0;
-    padding: 0;
-}
-
-.header {
-    background: #12355b;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.container {
-    width: 95%;
-    margin: 20px auto;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-}
-
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 18px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-}
-
-h2 {
-    color: #12355b;
-    margin-top: 0;
-}
-
-.waiting {
-    color: #1e293b;
-    font-weight: bold;
-}
-
-.alert-box {
-    background: #fff3f3;
-    border: 1px solid #ffb4b4;
-    color: #b00020;
-    padding: 15px;
-    border-radius: 10px;
-    font-weight: bold;
-}
-
-.agent {
-    background: #f1f5f9;
-    padding: 10px;
-    border-radius: 8px;
-    margin: 8px 0;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.button-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-button {
-    border: none;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-.primary {
-    background: #1f7a4d;
-    color: white;
-}
-
-.secondary {
-    background: #e8eef8;
-    color: #12355b;
-}
-
-pre {
-    white-space: pre-wrap;
-    background: #f6f6f6;
-    padding: 12px;
-    border-radius: 8px;
-    font-family: monospace;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    .bloom-btn {
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
+        transition: all 0.3s ease;
+    }
+    .bloom-btn:hover {
+        box-shadow: 0 0 25px rgba(220, 38, 38, 0.7);
+        transform: translateY(-2px);
+    }
+    .data-label {
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.875rem;
+    }
+    .data-value {
+        font-weight: 500;
+        color: #0f172a;
+        font-size: 1rem;
+    }
 </style>
 </head>
+<body class="bg-white text-slate-800 antialiased min-h-screen">
 
-<body>
+<header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Clinical Monitoring Dashboard</h1>
+        <div class="flex items-center space-x-2 text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span>Live Agent Network Active</span>
+        </div>
+    </div>
+</header>
 
-<div class="header">
-    Rural RPM Nurse Output Dashboard
-</div>
+<main class="max-w-7xl mx-auto px-6 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-<div class="container">
+        <div class="lg:col-span-2 space-y-8">
 
-    <div class="grid">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-red-600 uppercase tracking-wide">Calculated Risk Level</p>
+                        <p id="risk_level" class="text-3xl font-black text-red-700 mt-1">Waiting for Triage Agent...</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-red-600 uppercase tracking-wide">Priority Routing</p>
+                        <p id="priority" class="text-xl font-bold text-red-700 mt-1">Waiting...</p>
+                    </div>
+                </div>
 
-        <div>
-
-            <div class="card">
-                <h2>Nurse Alert</h2>
-                <div class="alert-box">
-                    Risk Level:
-                    <span id="risk_level" class="waiting">Waiting for Triage Agent...</span>
-                    <br>
-                    Priority:
-                    <span id="priority" class="waiting">Waiting...</span>
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Patient Demographics</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div><span class="data-label">Name</span><p id="patient_name" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">ID</span><p id="patient_id" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Age</span><p id="age" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Sex</span><p id="sex" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Location</span><p id="location" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Caregiver</span><p id="caregiver" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Contact</span><p id="preferred_contact" class="data-value">Waiting...</p></div>
+                    <div><span class="data-label">Connectivity</span><p id="connectivity" class="data-value">Waiting...</p></div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>Patient Summary</h2>
-                <p><b>Name:</b> <span id="patient_name" class="waiting">Waiting...</span></p>
-                <p><b>Patient ID:</b> <span id="patient_id" class="waiting">Waiting...</span></p>
-                <p><b>Age:</b> <span id="age" class="waiting">Waiting...</span></p>
-                <p><b>Sex:</b> <span id="sex" class="waiting">Waiting...</span></p>
-                <p><b>Rural Location / County:</b> <span id="location" class="waiting">Waiting...</span></p>
-                <p><b>Caregiver:</b> <span id="caregiver" class="waiting">Waiting...</span></p>
-                <p><b>Preferred Contact:</b> <span id="preferred_contact" class="waiting">Waiting...</span></p>
-                <p><b>Connectivity:</b> <span id="connectivity" class="waiting">Waiting...</span></p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Normalized Vitals</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Blood Pressure</span><span id="blood_pressure" class="data-value font-bold text-red-600">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Heart Rate</span><span id="heart_rate" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">SpO₂</span><span id="spo2" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Glucose</span><span id="glucose" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Temperature</span><span id="temperature" class="data-value">--</span></div>
+                        <div class="flex justify-between"><span class="data-label">Weight</span><span id="weight" class="data-value">--</span></div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Symptoms Flagged</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Shortness of breath</span><span id="shortness_of_breath" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Chest pain</span><span id="chest_pain" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Dizziness</span><span id="dizziness" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Swelling</span><span id="swelling" class="data-value">--</span></div>
+                        <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Fatigue</span><span id="fatigue" class="data-value">--</span></div>
+                        <div class="flex justify-between"><span class="data-label">Difficulty sleeping flat</span><span id="difficulty_sleeping_flat" class="data-value">--</span></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>Vital Signs</h2>
-                <p><b>Weight:</b> <span id="weight" class="waiting">--</span></p>
-                <p><b>Blood Pressure:</b> <span id="blood_pressure" class="waiting">--</span></p>
-                <p><b>Heart Rate:</b> <span id="heart_rate" class="waiting">--</span></p>
-                <p><b>SpO₂:</b> <span id="spo2" class="waiting">--</span></p>
-                <p><b>Glucose:</b> <span id="glucose" class="waiting">--</span></p>
-                <p><b>Temperature:</b> <span id="temperature" class="waiting">--</span></p>
-            </div>
-
-            <div class="card">
-                <h2>Symptoms Reported</h2>
-                <p><b>Shortness of breath:</b> <span id="shortness_of_breath" class="waiting">Waiting...</span></p>
-                <p><b>Chest pain:</b> <span id="chest_pain" class="waiting">Waiting...</span></p>
-                <p><b>Dizziness:</b> <span id="dizziness" class="waiting">Waiting...</span></p>
-                <p><b>Swelling:</b> <span id="swelling" class="waiting">Waiting...</span></p>
-                <p><b>Fatigue:</b> <span id="fatigue" class="waiting">Waiting...</span></p>
-                <p><b>Difficulty sleeping flat:</b> <span id="difficulty_sleeping_flat" class="waiting">Waiting...</span></p>
-            </div>
-
-            <div class="card">
-                <h2>Medication & Notes</h2>
-                <p><b>Medication Name:</b> <span id="medication_name" class="waiting">Waiting...</span></p>
-                <p><b>Dose:</b> <span id="dose" class="waiting">Waiting...</span></p>
-                <p><b>Frequency:</b> <span id="frequency" class="waiting">Waiting...</span></p>
-                <p><b>Missed Doses:</b> <span id="missed_doses" class="waiting">Waiting...</span></p>
-                <p><b>Medication Notes:</b> <span id="medication_notes" class="waiting">Waiting...</span></p>
-                <p><b>Additional Notes:</b> <span id="additional_notes" class="waiting">Waiting...</span></p>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Agent-Generated EHR Note Draft</h2>
+                <pre id="documentation_note" class="bg-slate-50 border border-slate-200 p-4 rounded-xl text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">Waiting for Documentation Agent...</pre>
             </div>
 
         </div>
 
-        <div>
+        <div class="space-y-8">
 
-            <div class="card">
-                <h2>Agent Information Received</h2>
-                <div class="agent" id="intake_agent">⏳ Intake Agent Waiting...</div>
-                <div class="agent" id="device_agent">⏳ Device Data Agent Waiting...</div>
-                <div class="agent" id="symptom_agent">⏳ Symptom Agent Waiting...</div>
-                <div class="agent" id="medication_agent">⏳ Medication Agent Waiting...</div>
-                <div class="agent" id="connectivity_agent">⏳ Connectivity Agent Waiting...</div>
-                <div class="agent" id="triage_agent">⏳ Triage Agent Waiting...</div>
-                <div class="agent" id="care_agent">⏳ Care Coordination Agent Waiting...</div>
-                <div class="agent" id="documentation_agent">⏳ Documentation Agent Waiting...</div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2">Multi-Agent Execution Trace</h2>
+                <div class="space-y-2">
+                    <div id="intake_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Intake Agent Waiting...</div>
+                    <div id="device_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Device Data Agent Waiting...</div>
+                    <div id="symptom_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Symptom Agent Waiting...</div>
+                    <div id="medication_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Medication Agent Waiting...</div>
+                    <div id="connectivity_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Connectivity Agent Waiting...</div>
+                    <div id="triage_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Triage Agent Waiting...</div>
+                    <div id="care_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Care Coordination Agent Waiting...</div>
+                    <div id="documentation_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Documentation Agent Waiting...</div>
+                </div>
             </div>
 
-            <div class="card">
-                <h2>Recommended Next Steps</h2>
-                <ul id="next_steps">
-                    <li class="waiting">Waiting for Care Coordination Agent...</li>
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">AI Recommended Protocol</h2>
+                <ul id="next_steps" class="list-disc pl-5 space-y-2 text-sm text-slate-700 font-medium mb-6">
+                    <li>Waiting for Care Coordination Agent...</li>
                 </ul>
 
-                <div class="button-row">
-                    <button class="primary">Call Patient</button>
-                    <button class="secondary">Add Note to EHR</button>
+                <div class="space-y-3">
+                    <button class="w-full bg-red-600 text-white py-3 rounded-xl font-semibold bloom-btn">Escalate to Specialist</button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-medium text-sm transition-colors border border-slate-300">Call Patient</button>
+                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-medium text-sm transition-colors border border-slate-300">Save EHR Note</button>
+                    </div>
                 </div>
-
-                <div class="button-row">
-                    <button class="secondary">Escalate to Provider</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Documentation Agent Draft</h2>
-                <pre id="documentation_note" class="waiting">Waiting for Documentation Agent...</pre>
             </div>
 
         </div>
 
     </div>
-
-</div>
+</main>
 
 <script>
 async function loadAgentOutput() {
@@ -252,14 +188,6 @@ async function loadAgentOutput() {
         document.getElementById("fatigue").textContent = s.fatigue ? "Yes" : "No";
         document.getElementById("difficulty_sleeping_flat").textContent = s.difficulty_sleeping_flat ? "Yes" : "No";
 
-        document.getElementById("medication_name").textContent = m.medication_name || "";
-        document.getElementById("dose").textContent = m.dose || "";
-        document.getElementById("frequency").textContent = m.frequency || "";
-        document.getElementById("missed_doses").textContent = m.missed_doses || "";
-
-        document.getElementById("medication_notes").textContent = n.medication_notes || "";
-        document.getElementById("additional_notes").textContent = n.additional_notes || "";
-
         document.getElementById("risk_level").textContent = triage.risk_level || "";
         document.getElementById("priority").textContent = triage.priority || "";
 
@@ -280,13 +208,12 @@ async function loadAgentOutput() {
         document.getElementById("documentation_note").textContent = documentation.nurse_note || "";
 
     } catch (error) {
-        console.log("Waiting for API data...", error);
+        console.error(error);
     }
 }
 
 loadAgentOutput();
 setInterval(loadAgentOutput, 3000);
 </script>
-
 </body>
 </html>

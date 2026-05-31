@@ -1,269 +1,196 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rural RPM Patient Intake Form</title>
-
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{
-    font-family: Arial, sans-serif;
-    background:#f4f6f8;
-    margin:0;
-    padding:0;
-}
-
-.header{
-    background:#12355b;
-    color:white;
-    padding:20px;
-    text-align:center;
-    font-size:28px;
-    font-weight:bold;
-}
-
-.container{
-    width:95%;
-    margin:auto;
-    margin-top:20px;
-}
-
-.row{
-    display:flex;
-    gap:20px;
-}
-
-.card{
-    background:white;
-    border-radius:10px;
-    padding:20px;
-    flex:1;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-}
-
-.card h2{
-    color:#12355b;
-}
-
-label{
-    display:block;
-    margin-top:10px;
-    font-weight:bold;
-}
-
-input{
-    width:100%;
-    padding:10px;
-    margin-top:4px;
-    box-sizing: border-box;
-}
-
-select{
-    width:100%;
-    padding:10px;
-    margin-top:4px;
-    box-sizing: border-box;
-}
-
-textarea{
-    width:100%;
-    padding:10px;
-    margin-top:4px;
-    box-sizing: border-box;
-}
-
-.symptoms{
-    background:white;
-    border-radius:10px;
-    padding:20px;
-    margin-top:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-}
-
-.notes{
-    background:white;
-    border-radius:10px;
-    padding:20px;
-    margin-top:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,.15);
-}
-
-.button-area{
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top:25px;
-    margin-bottom:30px;
-}
-
-button{
-    background:#1f7a4d;
-    color:white;
-    border:none;
-    padding:15px 40px;
-    font-size:18px;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#155a39;
-}
-
-.dev-btn {
-    background: #475569;
-}
-
-.dev-btn:hover {
-    background: #334155;
-}
-
-.loading-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(18, 53, 91, 0.85);
-    color: white;
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    padding-top: 20%;
-    z-index: 1000;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+    .bloom-btn {
+        box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
+        transition: all 0.3s ease;
+    }
+    .bloom-btn:hover {
+        box-shadow: 0 0 25px rgba(37, 99, 235, 0.7);
+        transform: translateY(-2px);
+    }
+    .glass-overlay {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+    }
 </style>
 </head>
+<body class="bg-white text-slate-800 antialiased min-h-screen flex flex-col">
 
-<body>
-
-<div id="loading" class="loading-overlay">
-    Orchestrating 8 Multi-Agent System Ecosystem Logs...<br>
-    Running Evaluators & Piping Metrics to Weights & Biases Dashboard...
+<div id="loading" class="hidden fixed inset-0 glass-overlay z-50 flex flex-col items-center justify-center">
+    <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-6"></div>
+    <h2 class="text-2xl font-bold text-slate-900 mb-2">Orchestrating 8 Multi-Agent System Ecosystem Logs...</h2>
+    <p class="text-slate-600 font-medium">Running Evaluators & Piping Metrics to Weights & Biases Dashboard...</p>
 </div>
 
-<div class="header">
-    Rural RPM Patient Intake Form
-</div>
+<header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-5">
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Rural RPM Patient Intake Form</h1>
+    </div>
+</header>
 
-<div class="container">
+<main class="flex-grow max-w-7xl mx-auto px-6 py-10 w-full">
+    <form id="patientForm" class="space-y-8">
 
-<form id="patientForm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    <div class="row">
+            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Patient Information</h2>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Patient Name</label>
+                        <input type="text" id="patient_name" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Patient ID</label>
+                        <input type="text" id="patient_id" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Age</label>
+                            <input type="number" id="age" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Sex</label>
+                            <select id="sex" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                                <option>Female</option>
+                                <option>Male</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Rural Location / County</label>
+                        <input type="text" id="rural_location_county" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Caregiver Name</label>
+                        <input type="text" id="caregiver_name" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Contact Method</label>
+                            <select id="preferred_contact_method" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                                <option>SMS</option>
+                                <option>Phone Call</option>
+                                <option>Mobile App</option>
+                                <option>Caregiver</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Connectivity</label>
+                            <select id="connectivity_status" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                                <option>Good</option>
+                                <option>Fair</option>
+                                <option>Poor</option>
+                                <option>Offline</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <div class="card">
+            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Vital Signs</h2>
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Weight</label>
+                        <input type="text" id="weight" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Blood Pressure</label>
+                        <input type="text" id="blood_pressure" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Heart Rate</label>
+                        <input type="text" id="heart_rate" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">SpO₂</label>
+                        <input type="text" id="spo2" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Glucose</label>
+                        <input type="text" id="glucose" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Temperature</label>
+                        <input type="text" id="temperature" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                    </div>
+                </div>
 
-            <h2>Patient Information</h2>
-
-            <label>Patient Name</label>
-            <input type="text" id="patient_name">
-
-            <label>Patient ID</label>
-            <input type="text" id="patient_id">
-
-            <label>Age</label>
-            <input type="number" id="age">
-
-            <label>Sex</label>
-            <select id="sex">
-                <option>Female</option>
-                <option>Male</option>
-                <option>Other</option>
-            </select>
-
-            <label>Rural Location / County</label>
-            <input type="text" id="rural_location_county">
-
-            <label>Caregiver Name</label>
-            <input type="text" id="caregiver_name">
-
-            <label>Preferred Contact Method</label>
-            <select id="preferred_contact_method">
-                <option>SMS</option>
-                <option>Phone Call</option>
-                <option>Mobile App</option>
-                <option>Caregiver</option>
-            </select>
-
-            <label>Connectivity Status</label>
-            <select id="connectivity_status">
-                <option>Good</option>
-                <option>Fair</option>
-                <option>Poor</option>
-                <option>Offline</option>
-            </select>
+                <h2 class="text-xl font-semibold text-slate-900 mt-10 mb-6 pb-2 border-b border-slate-100">Symptoms</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="shortness_of_breath" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Shortness of breath</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="chest_pain" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Chest pain</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="dizziness" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Dizziness</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="swelling" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Swelling</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="fatigue" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Fatigue</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="difficulty_sleeping_flat" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Difficulty sleeping flat</span>
+                    </label>
+                </div>
+            </div>
 
         </div>
 
-        <div class="card">
-
-            <h2>RPM / Triage Inputs</h2>
-
-            <label>Weight</label>
-            <input type="text" id="weight">
-
-            <label>Blood Pressure</label>
-            <input type="text" id="blood_pressure">
-
-            <label>Heart Rate</label>
-            <input type="text" id="heart_rate">
-
-            <label>SpO₂</label>
-            <input type="text" id="spo2">
-
-            <label>Glucose</label>
-            <input type="text" id="glucose">
-
-            <label>Temperature</label>
-            <input type="text" id="temperature">
-
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Notes & History</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Medication Notes</label>
+                    <textarea id="medication_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Additional Clinical Notes</label>
+                    <textarea id="additional_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"></textarea>
+                </div>
+            </div>
         </div>
 
-    </div>
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 pb-12">
+            <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold bloom-btn text-lg">
+                Send to Multiagent Model
+            </button>
+            <button type="button" id="fillTestDataBtn" class="w-full sm:w-auto bg-slate-100 text-slate-700 border border-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-200 transition-all text-lg">
+                Fill Demo Test Data
+            </button>
+        </div>
 
-    <div class="symptoms">
-
-        <h2>Symptoms</h2>
-
-        <input type="checkbox" id="shortness_of_breath"> Shortness of breath<br><br>
-        <input type="checkbox" id="chest_pain"> Chest pain<br><br>
-        <input type="checkbox" id="dizziness"> Dizziness<br><br>
-        <input type="checkbox" id="swelling"> Swelling<br><br>
-        <input type="checkbox" id="fatigue"> Fatigue<br><br>
-        <input type="checkbox" id="difficulty_sleeping_flat"> Difficulty sleeping flat<br><br>
-
-    </div>
-
-    <div class="notes">
-
-        <h2>Medication Notes</h2>
-
-        <textarea rows="5" id="medication_notes"></textarea>
-
-        <h2>Additional Notes</h2>
-
-        <textarea rows="5" id="additional_notes"></textarea>
-
-    </div>
-
-    <div class="button-area">
-        <button type="submit">
-            Send to Multiagent Model
-        </button>
-        <button type="button" class="dev-btn" id="fillTestDataBtn">
-            Fill Demo Test Data
-        </button>
-    </div>
-
-</form>
-
-</div>
+    </form>
+</main>
 
 <script>
 document.getElementById("patientForm").addEventListener("submit", async function(event) {
     event.preventDefault();
-    document.getElementById("loading").style.display = "block";
+    document.getElementById("loading").classList.remove("hidden");
 
     const patientData = {
         patient_information: {
@@ -318,7 +245,7 @@ document.getElementById("patientForm").addEventListener("submit", async function
         }
     } catch (error) {
         alert("Execution Error: Check backend terminal logs.");
-        document.getElementById("loading").style.display = "none";
+        document.getElementById("loading").classList.add("hidden");
     }
 });
 
@@ -346,10 +273,9 @@ document.getElementById("fillTestDataBtn").addEventListener("click", function() 
     document.getElementById("fatigue").checked = true;
     document.getElementById("difficulty_sleeping_flat").checked = true;
 
-    document.getElementById("medication_notes").value = "Ficou sem os remédios de pressão desde sexta-feira. Não conseguiu transporte para ir buscar a medicação de alto custo no posto central urbano.";
-    document.getElementById("additional_notes").value = "Apresenta quadro persistente de cansaço agudo, picos pressóricos noturnos e cefaleia occipital constante.";
+    document.getElementById("medication_notes").value = "Did not take blood pressure medication since Friday. Unable to arrange transportation to go pick up high-cost medication at the central urban health clinic.";
+    document.getElementById("additional_notes").value = "He presents with persistent acute fatigue, nocturnal blood pressure spikes, and constant occipital headache.";
 });
 </script>
-
 </body>
 </html>
