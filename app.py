@@ -157,6 +157,8 @@ def patient_intake_api():
         LATEST_ORCHESTRATION_RESULT = response_data
         return jsonify({"status": "processed", "redirect": "/output"}), 200
     except Exception as e:
+        # Imprime o erro crítico em vermelho no terminal para debug instantâneo
+        print(f"\n🔥 ERRO FATAL NA ORQUESTRAÇÃO: {str(e)}\n")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/agent-output", methods=["GET"])
