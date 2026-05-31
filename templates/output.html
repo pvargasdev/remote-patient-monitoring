@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rural RPM Nurse Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>RuralCare AI | Clinical Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
     }
     .bloom-btn {
         box-shadow: 0 0 15px rgba(220, 38, 38, 0.4);
-        transition: all 0.3s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .bloom-btn:hover {
         box-shadow: 0 0 25px rgba(220, 38, 38, 0.7);
@@ -32,17 +33,102 @@
     }
 </style>
 </head>
-<body class="bg-white text-slate-800 antialiased min-h-screen">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+<div id="traceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="traceModalBg"></div>
+    <div class="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-8 transform transition-all scale-95 opacity-0 duration-300 max-h-[90vh] overflow-y-auto" id="traceModalContent">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-900">Agent Interaction Trace</h2>
+            <button id="closeTraceBtnX" class="text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-blue-100 text-blue-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm9.707 5.707a1 1 0 00-1.414-1.414L9 12.586l-1.293-1.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Intake & Connectivity</h4>
+                    <p id="modal_intake_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                    <p id="modal_connectivity_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Device Data Agent</h4>
+                    <p id="modal_device_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-red-100 text-red-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Risk Triage Agent</h4>
+                    <p id="modal_triage_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-amber-100 text-amber-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Parallel Review Agents</h4>
+                    <p id="modal_symptom_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                    <p id="modal_medication_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald-100 text-emerald-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Coordination & Documentation</h4>
+                    <p id="modal_care_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                    <p id="modal_documentation_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 text-right">
+            <button id="closeTraceBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 shadow-sm">
+                Close Trace
+            </button>
+        </div>
+    </div>
+</div>
 
 <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Clinical Monitoring Dashboard</h1>
-        <div class="flex items-center space-x-2 text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            <span>Live Agent Network Active</span>
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
+                R
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">RuralCare AI <span class="text-slate-400 font-medium text-lg ml-2">| Clinical Dashboard</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="openTraceBtn" class="bg-white hover:bg-slate-50 text-slate-700 px-5 py-2 rounded-lg font-semibold text-sm transition-all border border-slate-300 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 active:scale-95">
+                View Agent Trace Details
+            </button>
+            <div class="flex items-center space-x-2 text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200 shadow-sm">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span>Live Agent Network</span>
+            </div>
         </div>
     </div>
 </header>
@@ -51,9 +137,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         <div class="lg:col-span-2 space-y-8">
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex items-center justify-between">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex items-center justify-between shadow-sm">
                     <div>
                         <p class="text-sm font-bold text-red-600 uppercase tracking-wide">Calculated Risk Level</p>
                         <p id="risk_level" class="text-3xl font-black text-red-700 mt-1">Waiting for Triage Agent...</p>
@@ -78,7 +163,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                     <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Normalized Vitals</h2>
                     <div class="space-y-3">
                         <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Blood Pressure</span><span id="blood_pressure" class="data-value font-bold text-red-600">--</span></div>
@@ -90,7 +175,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                     <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Symptoms Flagged</h2>
                     <div class="space-y-3">
                         <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Shortness of breath</span><span id="shortness_of_breath" class="data-value">--</span></div>
@@ -102,51 +187,62 @@
                     </div>
                 </div>
             </div>
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Agent-Generated EHR Note Draft</h2>
-                <pre id="documentation_note" class="bg-slate-50 border border-slate-200 p-4 rounded-xl text-sm text-slate-700 whitespace-pre-wrap font-mono leading-relaxed overflow-x-auto">Waiting for Documentation Agent...</pre>
-            </div>
-
         </div>
 
         <div class="space-y-8">
-
-            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-200 pb-2">Multi-Agent Execution Trace</h2>
-                <div class="space-y-2">
-                    <div id="intake_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Intake Agent Waiting...</div>
-                    <div id="device_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Device Data Agent Waiting...</div>
-                    <div id="symptom_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Symptom Agent Waiting...</div>
-                    <div id="medication_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Medication Agent Waiting...</div>
-                    <div id="connectivity_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Connectivity Agent Waiting...</div>
-                    <div id="triage_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Triage Agent Waiting...</div>
-                    <div id="care_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Care Coordination Agent Waiting...</div>
-                    <div id="documentation_agent" class="bg-white border border-slate-200 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 shadow-sm">⏳ Documentation Agent Waiting...</div>
-                </div>
-            </div>
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">AI Recommended Protocol</h2>
-                <ul id="next_steps" class="list-disc pl-5 space-y-2 text-sm text-slate-700 font-medium mb-6">
+                <ul id="next_steps" class="list-disc pl-5 space-y-2 text-sm text-slate-700 font-medium mb-8">
                     <li>Waiting for Care Coordination Agent...</li>
                 </ul>
 
                 <div class="space-y-3">
-                    <button class="w-full bg-red-600 text-white py-3 rounded-xl font-semibold bloom-btn">Escalate to Specialist</button>
+                    <button class="w-full bg-red-600 text-white py-4 rounded-xl font-semibold bloom-btn text-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 active:scale-95">
+                        Escalate to Specialist
+                    </button>
                     <div class="grid grid-cols-2 gap-3">
-                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-medium text-sm transition-colors border border-slate-300">Call Patient</button>
-                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-medium text-sm transition-colors border border-slate-300">Save EHR Note</button>
+                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-semibold text-sm transition-all border border-slate-300 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95">Call Patient</button>
+                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-semibold text-sm transition-all border border-slate-300 shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95">Save EHR Note</button>
                     </div>
                 </div>
             </div>
 
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Agent-Generated EHR Note Draft</h2>
+                <div id="documentation_note" class="prose prose-slate prose-sm max-w-none bg-slate-50 border border-slate-200 p-5 rounded-xl">
+                    <p class="text-slate-500 italic">Waiting for Documentation Agent...</p>
+                </div>
+            </div>
         </div>
 
     </div>
 </main>
 
 <script>
+document.getElementById("openTraceBtn").addEventListener("click", function() {
+    const modal = document.getElementById("traceModal");
+    const content = document.getElementById("traceModalContent");
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+        content.classList.remove("scale-95", "opacity-0");
+        content.classList.add("scale-100", "opacity-100");
+    }, 10);
+});
+
+function closeTraceModal() {
+    const modal = document.getElementById("traceModal");
+    const content = document.getElementById("traceModalContent");
+    content.classList.remove("scale-100", "opacity-100");
+    content.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, 300);
+}
+
+document.getElementById("closeTraceBtn").addEventListener("click", closeTraceModal);
+document.getElementById("closeTraceBtnX").addEventListener("click", closeTraceModal);
+document.getElementById("traceModalBg").addEventListener("click", closeTraceModal);
+
 async function loadAgentOutput() {
     try {
         const response = await fetch("/api/agent-output");
@@ -191,21 +287,29 @@ async function loadAgentOutput() {
         document.getElementById("risk_level").textContent = triage.risk_level || "";
         document.getElementById("priority").textContent = triage.priority || "";
 
-        document.getElementById("intake_agent").textContent = agents.intake_agent || "";
-        document.getElementById("device_agent").textContent = agents.device_agent || "";
-        document.getElementById("symptom_agent").textContent = agents.symptom_agent || "";
-        document.getElementById("medication_agent").textContent = agents.medication_agent || "";
-        document.getElementById("connectivity_agent").textContent = agents.connectivity_agent || "";
-        document.getElementById("triage_agent").textContent = agents.triage_agent || "";
-        document.getElementById("care_agent").textContent = agents.care_agent || "";
-        document.getElementById("documentation_agent").textContent = agents.documentation_agent || "";
+        document.getElementById("modal_intake_agent").textContent = agents.intake_agent || "";
+        document.getElementById("modal_device_agent").textContent = agents.device_agent || "";
+        document.getElementById("modal_symptom_agent").textContent = agents.symptom_agent || "";
+        document.getElementById("modal_medication_agent").textContent = agents.medication_agent || "";
+        document.getElementById("modal_connectivity_agent").textContent = agents.connectivity_agent || "";
+        document.getElementById("modal_triage_agent").textContent = agents.triage_agent || "";
+        document.getElementById("modal_care_agent").textContent = agents.care_agent || "";
+        document.getElementById("modal_documentation_agent").textContent = agents.documentation_agent || "";
 
         const steps = care.recommended_next_steps || [];
         document.getElementById("next_steps").innerHTML = steps
-            .map(step => `<li>${step}</li>`)
+            .map(step => {
+                if (typeof step === 'object' && step !== null) {
+                    const flattened = Object.values(step).map(v => typeof v === 'object' ? JSON.stringify(v) : v).join(' - ');
+                    return `<li>${flattened}</li>`;
+                }
+                return `<li>${step}</li>`;
+            })
             .join("");
 
-        document.getElementById("documentation_note").textContent = documentation.nurse_note || "";
+        if (documentation.nurse_note) {
+            document.getElementById("documentation_note").innerHTML = marked.parse(documentation.nurse_note);
+        }
 
     } catch (error) {
         console.error(error);

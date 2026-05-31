@@ -6,6 +6,8 @@ import google.generativeai as genai
 import weave
 from dotenv import load_dotenv
 
+TIME_SLEEP = 0
+
 load_dotenv()
 
 weave.init('multiagent-rural-health')
@@ -78,27 +80,27 @@ def multi_agent_orchestrator(payload):
     symptoms = payload.get("symptoms", {})
 
     clean_data = device_data_agent(vitals)
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     triage_result = risk_triage_agent(clean_data.get("normalizedVitals"), symptoms)
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     medication_result = medication_adherence_agent(symptoms)
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     social_result = social_needs_agent(symptoms)
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     education_result = patient_education_agent(triage_result.get("score"), clean_data.get("normalizedVitals"))
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     specialist_result = None
     if triage_result.get("score") == "High":
         specialist_result = specialist_access_agent(clean_data.get("normalizedVitals"), symptoms)
-        time.sleep(2.5)
+        time.sleep(TIME_SLEEP)
 
     coordination_result = care_coordinator_agent(triage_result, social_result)
-    time.sleep(2.5)
+    time.sleep(TIME_SLEEP)
 
     doc_result = documentation_agent(patient_info.get("patient_id"), triage_result, clean_data)
 
