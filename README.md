@@ -1,7 +1,7 @@
 # 🏥 RuralCare AI
 
 **Multi-Agent Remote Patient Monitoring (RPM) for Rural Healthcare**
-*Built for the Multi-Agent Orchestration Build Day (Cambridge, MA - May 31, 2026)*
+*Built for the Multi-Agent Orchestration Hackathon with Weights & Biases at MIT (Cambridge, MA - May 31, 2026)*
 
 RuralCare AI bridges the gap between patients in low-connectivity rural areas and urban healthcare providers. By utilizing an asynchronous, 5-layer multi-agent architecture, the system securely processes delayed patient vitals, calculates clinical risk, screens for social barriers, and drafts comprehensive EHR notes—all fully observable via Weights & Biases.
 
