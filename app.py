@@ -1,7 +1,10 @@
 import os
 import json
 import time
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 import google.generativeai as genai
 import weave
 from dotenv import load_dotenv
@@ -15,7 +18,11 @@ genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 app = Flask(__name__)
 
-LATEST_ORCHESTRATION_RESULT = None
+# Conexão com o MongoDB Local
+client = MongoClient("mongodb://localhost:27017/")
+db = client["ruralcare_db"]
+patients_collection = db["patients"]
+
 
 @weave.op()
 def device_data_agent(vitals):
@@ -24,12 +31,14 @@ def device_data_agent(vitals):
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
 
+
 @weave.op()
 def risk_triage_agent(vitals, symptoms):
     model = genai.GenerativeModel('gemini-2.5-flash-lite')
     prompt = f"Analyze vitals and symptoms to compute a risk level (Low, Moderate, High) and list critical alerts. Vitals: {json.dumps(vitals)}. Symptoms: {json.dumps(symptoms)}. Output format: JSON with keys: score, criticalAlerts."
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
+
 
 @weave.op()
 def medication_adherence_agent(symptoms):
@@ -38,12 +47,14 @@ def medication_adherence_agent(symptoms):
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
 
+
 @weave.op()
 def social_needs_agent(symptoms):
     model = genai.GenerativeModel('gemini-2.5-flash-lite')
     prompt = f"Screen text context or symptoms for structural barriers like transportation or food insecurity: {json.dumps(symptoms)}. Output format: JSON with key: socialNeedsIdentified."
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
+
 
 @weave.op()
 def patient_education_agent(triage_score, vitals):
@@ -52,12 +63,14 @@ def patient_education_agent(triage_score, vitals):
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
 
+
 @weave.op()
 def specialist_access_agent(vitals, symptoms):
     model = genai.GenerativeModel('gemini-2.5-flash-lite')
     prompt = f"Generate a condensed clinical brief for an emergency specialist consultation. Vitals: {json.dumps(vitals)}. Symptoms: {json.dumps(symptoms)}. Output format: JSON with key: specialistBrief."
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
+
 
 @weave.op()
 def care_coordinator_agent(triage, social):
@@ -66,12 +79,14 @@ def care_coordinator_agent(triage, social):
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
 
+
 @weave.op()
 def documentation_agent(patient_id, triage, clean_data):
     model = genai.GenerativeModel('gemini-2.5-flash-lite')
     prompt = f"Synthesize a professional EHR narrative note and append standard RPM billing code. Patient: {patient_id}. Triage: {json.dumps(triage)}. Data: {json.dumps(clean_data)}. Output format: JSON with keys: ehrClinicalNote, billingCodeReady."
     response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
     return json.loads(response.text)
+
 
 @weave.op()
 def multi_agent_orchestrator(payload):
@@ -81,16 +96,12 @@ def multi_agent_orchestrator(payload):
 
     clean_data = device_data_agent(vitals)
     time.sleep(TIME_SLEEP)
-
     triage_result = risk_triage_agent(clean_data.get("normalizedVitals"), symptoms)
     time.sleep(TIME_SLEEP)
-
     medication_result = medication_adherence_agent(symptoms)
     time.sleep(TIME_SLEEP)
-
     social_result = social_needs_agent(symptoms)
     time.sleep(TIME_SLEEP)
-
     education_result = patient_education_agent(triage_result.get("score"), clean_data.get("normalizedVitals"))
     time.sleep(TIME_SLEEP)
 
@@ -101,7 +112,6 @@ def multi_agent_orchestrator(payload):
 
     coordination_result = care_coordinator_agent(triage_result, social_result)
     time.sleep(TIME_SLEEP)
-
     doc_result = documentation_agent(patient_info.get("patient_id"), triage_result, clean_data)
 
     priority_calculated = "Standard"
@@ -111,24 +121,19 @@ def multi_agent_orchestrator(payload):
         priority_calculated = "Elevated Priority"
 
     mapped_output = {
-        "patient_information": patient_info,
-        "vital_signs": vitals,
-        "symptoms": symptoms,
-        "medications": payload.get("medications", [{}]),
-        "notes": payload.get("notes", {}),
         "triage_output": {
             "risk_level": triage_result.get("score", "Unknown"),
             "priority": priority_calculated
         },
         "agent_status": {
-            "intake_agent": "✅ Intake Agent Processed Data Successfully",
-            "device_agent": "✅ Device Data Agent Normalized Data Successfully",
-            "symptom_agent": "✅ Symptom Agent Logged Anomalies Successfully",
-            "medication_agent": f"✅ Medication Agent Complete: Barriers -> {medication_result.get('adherenceBarriers')}",
-            "connectivity_agent": f"✅ Connectivity Agent Configured for status: {patient_info.get('connectivity_status')}",
-            "triage_agent": f"✅ Triage Agent Completed Critical Calculations",
-            "care_agent": "✅ Care Coordination Agent Outlined Care Routines",
-            "documentation_agent": "✅ Documentation Agent Finalized Clinical Records Bundle"
+            "intake_agent": "✅ Intake Agent Processed Data",
+            "device_agent": "✅ Device Data Agent Normalized Data",
+            "symptom_agent": "✅ Symptom Agent Logged Anomalies",
+            "medication_agent": f"✅ Medication Agent Complete",
+            "connectivity_agent": f"✅ Connectivity Agent Configured",
+            "triage_agent": f"✅ Triage Agent Completed Calculations",
+            "care_agent": "✅ Care Coordination Agent Outlined Routines",
+            "documentation_agent": "✅ Documentation Agent Finalized Records"
         },
         "care_coordination": {
             "recommended_next_steps": [
@@ -142,33 +147,72 @@ def multi_agent_orchestrator(payload):
     }
     return mapped_output
 
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/output")
-def output_dashboard():
-    return render_template("output.html")
+
+@app.route("/nurse")
+def nurse_dashboard():
+    return render_template("nurse.html")
+
 
 @app.route("/api/patient-intake", methods=["POST"])
 def patient_intake_api():
-    global LATEST_ORCHESTRATION_RESULT
     try:
         data = request.get_json()
-        response_data = multi_agent_orchestrator(data)
-        LATEST_ORCHESTRATION_RESULT = response_data
-        return jsonify({"status": "processed", "redirect": "/output"}), 200
+        data["status"] = "pending"
+        data["created_at"] = datetime.now().isoformat()
+        data["analysis_result"] = None
+
+        # Salva o formulário cru no MongoDB
+        patients_collection.insert_one(data)
+
+        return jsonify({"status": "success", "message": "Data securely saved."}), 200
     except Exception as e:
-        # Imprime o erro crítico em vermelho no terminal para debug instantâneo
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/patients", methods=["GET"])
+def get_patients_list():
+    # Retorna a lista de pacientes para o painel da enfermeira
+    patients = list(
+        patients_collection.find({}, {"patient_information": 1, "status": 1, "created_at": 1}).sort("created_at", -1))
+    for p in patients:
+        p["_id"] = str(p["_id"])
+    return jsonify(patients), 200
+
+
+@app.route("/api/patient/<patient_id>", methods=["GET"])
+def get_patient_details(patient_id):
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if patient:
+        patient["_id"] = str(patient["_id"])
+        return jsonify(patient), 200
+    return jsonify({"error": "Not found"}), 404
+
+
+@app.route("/api/analyze/<patient_id>", methods=["POST"])
+def analyze_patient(patient_id):
+    try:
+        patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+        if not patient:
+            return jsonify({"error": "Patient not found"}), 404
+
+        # Roda o processamento multi-agente
+        ai_analysis = multi_agent_orchestrator(patient)
+
+        # Atualiza o banco de dados com a conclusão
+        patients_collection.update_one(
+            {"_id": ObjectId(patient_id)},
+            {"$set": {"status": "analyzed", "analysis_result": ai_analysis}}
+        )
+        return jsonify({"status": "analyzed"}), 200
+    except Exception as e:
         print(f"\n🔥 ERRO FATAL NA ORQUESTRAÇÃO: {str(e)}\n")
         return jsonify({"error": str(e)}), 500
 
-@app.route("/api/agent-output", methods=["GET"])
-def get_agent_output():
-    global LATEST_ORCHESTRATION_RESULT
-    if LATEST_ORCHESTRATION_RESULT is None:
-        return jsonify({"error": "No processing tasks found on memory instance"}), 404
-    return jsonify(LATEST_ORCHESTRATION_RESULT), 200
 
 if __name__ == "__main__":
     app.run(debug=True, port=3000)

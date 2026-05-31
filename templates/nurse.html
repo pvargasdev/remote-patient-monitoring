@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RuralCare AI | Clinical Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .bloom-btn { box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .bloom-btn:hover { box-shadow: 0 0 25px rgba(37, 99, 235, 0.7); transform: translateY(-2px); }
+    .data-label { font-weight: 600; color: #475569; font-size: 0.875rem; }
+    .data-value { font-weight: 500; color: #0f172a; font-size: 1rem; }
+    .patient-card.active { border-color: #3b82f6; background-color: #eff6ff; }
+    .glass-overlay { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
+    .node-line-v { width: 2px; height: 24px; background-color: #e2e8f0; margin: 0 auto; }
+    .node-line-h { height: 2px; width: 100%; background-color: #e2e8f0; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
+
+<header class="bg-white border-b border-slate-200 z-40 shadow-sm shrink-0">
+    <div class="px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">R</div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">RuralCare AI <span class="text-slate-400 font-medium text-lg ml-2">| Clinical Provider Hub</span></h1>
+        </div>
+        <div class="flex items-center space-x-2 text-sm font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200 shadow-sm">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span>Database Connected</span>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-1 overflow-hidden">
+    <aside class="w-1/3 max-w-sm bg-white border-r border-slate-200 flex flex-col h-full z-10 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+            <h2 class="font-bold text-slate-800">Recent Intakes</h2>
+            <button onclick="loadPatientList()" class="text-blue-600 hover:text-blue-800 p-1 rounded-md hover:bg-blue-50 transition-colors focus:outline-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </div>
+        <div id="patientListContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
+            <p class="text-slate-500 text-sm text-center py-4">Loading database...</p>
+        </div>
+    </aside>
+
+    <main class="flex-1 h-full overflow-y-auto relative bg-slate-50">
+
+        <div id="welcomeView" class="h-full flex flex-col items-center justify-center text-center p-8">
+            <div class="w-24 h-24 bg-white border border-slate-200 shadow-sm rounded-full flex items-center justify-center text-slate-300 mb-6">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Select a Patient Record</h2>
+            <p class="text-slate-500 max-w-md">Choose a recent intake from the sidebar to view raw data or run the Multi-Agent AI Orchestration.</p>
+        </div>
+
+        <div id="detailView" class="hidden max-w-5xl mx-auto p-8">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900" id="det_name">Name</h2>
+                    <p class="text-slate-500 mt-1">ID: <span id="det_id"></span> • Submitted: <span id="det_date"></span></p>
+                </div>
+                <div id="actionArea">
+                </div>
+            </div>
+
+            <div id="riskBanner" class="hidden w-full rounded-2xl p-6 mb-8 text-white shadow-lg transition-all duration-500 flex items-center justify-between">
+                <div>
+                    <p class="text-white/90 text-xs font-bold uppercase tracking-wider mb-1">Calculated Clinical Risk</p>
+                    <h2 id="banner_risk_level" class="text-4xl font-black tracking-tight drop-shadow-sm">--</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-white/90 text-xs font-bold uppercase tracking-wider mb-1">System Priority</p>
+                    <h3 id="banner_priority" class="text-2xl font-bold drop-shadow-sm">--</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Patient Demographics</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div><span class="data-label">Age</span><p id="det_age" class="data-value">--</p></div>
+                            <div><span class="data-label">Sex</span><p id="det_sex" class="data-value">--</p></div>
+                            <div><span class="data-label">Location</span><p id="det_loc" class="data-value">--</p></div>
+                            <div><span class="data-label">Caregiver</span><p id="det_caregiver" class="data-value">--</p></div>
+                            <div><span class="data-label">Contact</span><p id="det_contact" class="data-value">--</p></div>
+                            <div><span class="data-label">Connectivity</span><p id="det_conn" class="data-value">--</p></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Raw Vitals</h3>
+                            <div class="space-y-3" id="vitalsContainer"></div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-2">Symptoms Flagged</h3>
+                            <div class="space-y-2" id="symptomsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div id="aiResultsArea" class="hidden space-y-6">
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <h3 class="text-md font-semibold text-slate-900 mb-3 border-b border-slate-100 pb-2">AI Recommended Steps</h3>
+                            <ul id="ai_steps" class="list-disc pl-5 space-y-2 text-sm text-slate-700 font-medium mb-6"></ul>
+
+                            <button class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 shadow-md mb-3">
+                                Escalate to Specialist
+                            </button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-semibold text-sm transition-all border border-slate-300 shadow-sm focus:outline-none">Call Patient</button>
+                                <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 py-3 rounded-xl font-semibold text-sm transition-all border border-slate-300 shadow-sm focus:outline-none">Save to EHR</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                                <h3 class="text-md font-semibold text-slate-900">Execution Timeline</h3>
+                                <button id="openTraceBtn" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors focus:outline-none" title="View Detailed Trace">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+                                </button>
+                            </div>
+                            <div class="relative border-l-2 border-slate-100 ml-2 space-y-5 pb-2 mt-2">
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-blue-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">Layer 1: Device Data Agent</p>
+                                    <p class="text-xs text-slate-500">Ingestion & Normalization</p>
+                                </div>
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-red-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">Layer 2: Risk Triage Agent</p>
+                                    <p class="text-xs text-slate-500">Clinical Evaluation</p>
+                                </div>
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-amber-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">Layer 3: Parallel Review Network</p>
+                                    <p class="text-xs text-slate-500">Medication, Social & Education</p>
+                                </div>
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-emerald-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">Layer 4: Synthesis & Routing</p>
+                                    <p class="text-xs text-slate-500">Care Coordinator</p>
+                                </div>
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-indigo-500 rounded-full -left-[7px] top-1.5 ring-4 ring-white"></div>
+                                    <p class="text-sm font-bold text-slate-800 leading-tight">Layer 5: Clinical Narrative</p>
+                                    <p class="text-xs text-slate-500">Documentation Agent</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="pendingArea" class="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center shadow-sm">
+                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-blue-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-slate-900 mb-2">Analysis Pending</h3>
+                        <p class="text-sm text-slate-600 mb-5">This record has not been evaluated by the AI agents yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ehrNoteContainer" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+                <h3 class="text-xl font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-3">Agent-Generated EHR Note Draft</h3>
+                <div id="ai_note" class="prose prose-slate max-w-none text-slate-700"></div>
+            </div>
+        </div>
+
+        <div id="aiOverlay" class="hidden absolute inset-0 glass-overlay z-40 flex flex-col items-center justify-center p-6">
+            <div class="w-full max-w-3xl flex flex-col items-center">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Running Multi-Agent Orchestration</h2>
+                <p class="text-slate-500 font-medium mb-10">Tracing via Weights & Biases</p>
+
+                <div class="flex flex-col items-center w-full">
+                    <div id="node-device"></div>
+                    <div class="node-line-v"></div>
+                    <div id="node-triage"></div>
+                    <div class="node-line-v h-8"></div>
+
+                    <div class="flex w-full max-w-lg justify-between items-center px-16">
+                        <div class="node-line-h"></div>
+                        <div class="node-line-h"></div>
+                    </div>
+                    <div class="flex w-full max-w-xl justify-between px-4">
+                        <div class="node-line-v h-6"></div>
+                        <div class="node-line-v h-6"></div>
+                        <div class="node-line-v h-6"></div>
+                    </div>
+                    <div class="flex w-full max-w-2xl justify-between gap-4">
+                        <div id="node-med" class="flex-1"></div>
+                        <div id="node-social" class="flex-1"></div>
+                        <div id="node-edu" class="flex-1"></div>
+                    </div>
+                    <div class="flex w-full max-w-xl justify-between px-4">
+                        <div class="node-line-v h-6"></div>
+                        <div class="node-line-v h-6"></div>
+                        <div class="node-line-v h-6"></div>
+                    </div>
+                    <div class="flex w-full max-w-lg justify-between items-center px-16">
+                        <div class="node-line-h"></div>
+                        <div class="node-line-h"></div>
+                    </div>
+
+                    <div class="node-line-v h-8"></div>
+                    <div id="node-coord"></div>
+                    <div class="node-line-v"></div>
+                    <div id="node-doc"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div id="traceModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" id="traceModalBg"></div>
+    <div class="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-8 transform transition-all scale-95 opacity-0 duration-300 max-h-[90vh] overflow-y-auto" id="traceModalContent">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-900">Agent Interaction Trace</h2>
+            <button id="closeTraceBtnX" class="text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-blue-100 text-blue-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <span class="font-bold text-sm">L1</span>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Device Data Agent</h4>
+                    <p id="modal_device_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-red-100 text-red-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <span class="font-bold text-sm">L2</span>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Risk Triage Agent</h4>
+                    <p id="modal_triage_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-amber-100 text-amber-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <span class="font-bold text-sm">L3</span>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Parallel Review Agents</h4>
+                    <p id="modal_symptom_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                    <p id="modal_medication_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-emerald-100 text-emerald-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <span class="font-bold text-sm">L4</span>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Care Coordinator</h4>
+                    <p id="modal_care_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+            <div class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                <div class="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <span class="font-bold text-sm">L5</span>
+                </div>
+                <div class="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-800 text-sm">Documentation Agent</h4>
+                    <p id="modal_documentation_agent" class="text-sm text-slate-600 mt-1">Waiting...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 text-right">
+            <button id="closeTraceBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-6 py-2 rounded-lg font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 shadow-sm">
+                Close Trace
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentActivePatient = null;
+
+async function loadPatientList() {
+    const container = document.getElementById("patientListContainer");
+    container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Fetching database...</p>';
+
+    try {
+        const response = await fetch("/api/patients");
+        const patients = await response.json();
+
+        container.innerHTML = '';
+        if (patients.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">No records found.</p>';
+            return;
+        }
+
+        patients.forEach(p => {
+            const date = new Date(p.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+            const isAnalyzed = p.status === 'analyzed';
+            const badge = isAnalyzed
+                ? '<span class="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded font-bold">Analyzed</span>'
+                : '<span class="bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded font-bold">Pending</span>';
+
+            const card = document.createElement("div");
+            card.className = `patient-card bg-white border border-slate-200 p-4 rounded-xl cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all`;
+            card.onclick = () => loadPatientDetails(p._id, card);
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <p class="font-bold text-slate-800 text-sm truncate">${p.patient_information.patient_name}</p>
+                    ${badge}
+                </div>
+                <p class="text-xs text-slate-500">ID: ${p.patient_information.patient_id} • ${date}</p>
+            `;
+            container.appendChild(card);
+        });
+    } catch (e) {
+        container.innerHTML = '<p class="text-red-500 text-sm text-center py-4">Error loading records.</p>';
+    }
+}
+
+async function loadPatientDetails(id, cardElement) {
+    document.querySelectorAll('.patient-card').forEach(c => c.classList.remove('active'));
+    if(cardElement) cardElement.classList.add('active');
+
+    document.getElementById("welcomeView").classList.add("hidden");
+    document.getElementById("detailView").classList.remove("hidden");
+    document.getElementById("aiResultsArea").classList.add("hidden");
+    document.getElementById("ehrNoteContainer").classList.add("hidden");
+    document.getElementById("riskBanner").classList.add("hidden");
+    document.getElementById("pendingArea").classList.remove("hidden");
+    document.getElementById("actionArea").innerHTML = '<p class="text-slate-400">Loading...</p>';
+
+    try {
+        const response = await fetch(`/api/patient/${id}`);
+        const data = await response.json();
+        currentActivePatient = data;
+
+        const p = data.patient_information;
+        const v = data.vital_signs;
+        const s = data.symptoms;
+
+        document.getElementById("det_name").textContent = p.patient_name;
+        document.getElementById("det_id").textContent = p.patient_id;
+        document.getElementById("det_date").textContent = new Date(data.created_at).toLocaleString();
+        document.getElementById("det_age").textContent = p.age;
+        document.getElementById("det_sex").textContent = p.sex;
+        document.getElementById("det_loc").textContent = p.rural_location_county;
+        document.getElementById("det_caregiver").textContent = p.caregiver_name;
+        document.getElementById("det_contact").textContent = p.preferred_contact_method;
+        document.getElementById("det_conn").textContent = p.connectivity_status;
+
+        const vc = document.getElementById("vitalsContainer");
+        vc.innerHTML = `
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">BP</span><span class="data-value">${v.blood_pressure}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">HR</span><span class="data-value">${v.heart_rate}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">SpO₂</span><span class="data-value">${v.spo2}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Glucose</span><span class="data-value">${v.glucose}</span></div>
+            <div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">Temp</span><span class="data-value">${v.temperature}</span></div>
+            <div class="flex justify-between"><span class="data-label">Weight</span><span class="data-value">${v.weight}</span></div>
+        `;
+
+        const sc = document.getElementById("symptomsContainer");
+        const formatSymp = (name, val) => `<div class="flex justify-between border-b border-slate-50 pb-2"><span class="data-label">${name}</span><span class="text-sm font-bold ${val ? 'text-red-500' : 'text-slate-400'}">${val ? 'Yes' : 'No'}</span></div>`;
+        sc.innerHTML = formatSymp("Shortness of breath", s.shortness_of_breath) +
+                       formatSymp("Chest pain", s.chest_pain) +
+                       formatSymp("Dizziness", s.dizziness) +
+                       formatSymp("Swelling", s.swelling) +
+                       formatSymp("Fatigue", s.fatigue) +
+                       formatSymp("Diff. sleeping flat", s.difficulty_sleeping_flat);
+
+        if (data.status === 'pending') {
+            document.getElementById("actionArea").innerHTML = `
+                <button onclick="triggerAnalysis('${id}')" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold bloom-btn focus:outline-none flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Run Multi-Agent Analysis
+                </button>
+            `;
+        } else if (data.status === 'analyzed') {
+            document.getElementById("actionArea").innerHTML = `
+                <div class="px-6 py-2 bg-emerald-100 text-emerald-700 rounded-full font-bold text-sm flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Analysis Complete
+                </div>
+            `;
+            renderAiResults(data.analysis_result);
+        }
+
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function renderAiResults(ai) {
+    document.getElementById("pendingArea").classList.add("hidden");
+    document.getElementById("aiResultsArea").classList.remove("hidden");
+    document.getElementById("ehrNoteContainer").classList.remove("hidden");
+
+    const banner = document.getElementById("riskBanner");
+    const level = ai.triage_output.risk_level.toLowerCase();
+
+    banner.className = "w-full rounded-2xl p-6 mb-8 text-white shadow-lg transition-all duration-500 flex items-center justify-between";
+
+    if (level.includes("high") || level.includes("alto")) {
+        banner.classList.add("bg-gradient-to-r", "from-red-600", "to-rose-500");
+    } else if (level.includes("moderate") || level.includes("médio") || level.includes("moderado")) {
+        banner.classList.add("bg-gradient-to-r", "from-amber-500", "to-orange-400");
+    } else {
+        banner.classList.add("bg-gradient-to-r", "from-emerald-500", "to-teal-400");
+    }
+
+    document.getElementById("banner_risk_level").textContent = ai.triage_output.risk_level;
+    document.getElementById("banner_priority").textContent = ai.triage_output.priority;
+
+    const steps = ai.care_coordination.recommended_next_steps || [];
+    document.getElementById("ai_steps").innerHTML = steps.map(s => {
+        if (typeof s === 'object' && s !== null) {
+            const flattened = Object.values(s).map(v => typeof v === 'object' ? JSON.stringify(v) : v).join(' - ');
+            return `<li>${flattened}</li>`;
+        }
+        return `<li>${s}</li>`;
+    }).join("");
+
+    if (ai.documentation.nurse_note) {
+        document.getElementById("ai_note").innerHTML = marked.parse(ai.documentation.nurse_note);
+    }
+
+    const agents = ai.agent_status || {};
+    document.getElementById("modal_device_agent").textContent = agents.device_agent || "No data";
+    document.getElementById("modal_triage_agent").textContent = agents.triage_agent || "No data";
+    document.getElementById("modal_symptom_agent").textContent = agents.symptom_agent || "No data";
+    document.getElementById("modal_medication_agent").textContent = agents.medication_agent || "No data";
+    document.getElementById("modal_care_agent").textContent = agents.care_agent || "No data";
+    document.getElementById("modal_documentation_agent").textContent = agents.documentation_agent || "No data";
+}
+
+const waitIcon = `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+const spinIcon = `<svg class="animate-spin w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+const checkIcon = `<svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+
+function setNodeState(id, state, name) {
+    const el = document.getElementById(id);
+    const isSmall = id === 'node-med' || id === 'node-social' || id === 'node-edu';
+    const baseClass = "border-2 rounded-xl px-4 py-3 flex flex-col items-center justify-center transition-all duration-300 ";
+    const sizeClass = isSmall ? "w-full text-sm" : "w-64";
+
+    if (state === 'waiting') {
+        el.className = baseClass + sizeClass + " bg-white border-slate-200 shadow-sm";
+        el.innerHTML = `<div class="flex items-center gap-2 text-slate-400 font-semibold">${waitIcon} <span>${name}</span></div><span class="text-xs font-bold text-slate-400 mt-1">Waiting...</span>`;
+    } else if (state === 'processing') {
+        el.className = baseClass + sizeClass + " bg-blue-50 border-blue-400 scale-105 shadow-md";
+        el.innerHTML = `<div class="flex items-center gap-2 text-blue-700 font-semibold">${spinIcon} <span>${name}</span></div><span class="text-xs font-bold text-blue-600 mt-1">Processing Data...</span>`;
+    } else if (state === 'completed') {
+        el.className = baseClass + sizeClass + " bg-emerald-50 border-emerald-400 shadow-sm";
+        el.innerHTML = `<div class="flex items-center gap-2 text-emerald-700 font-semibold">${checkIcon} <span>${name}</span></div><span class="text-xs font-bold text-emerald-600 mt-1">Work Completed</span>`;
+    }
+}
+
+function resetFlowchart() {
+    setNodeState("node-device", "waiting", "Device Data Agent");
+    setNodeState("node-triage", "waiting", "Risk Triage Agent");
+    setNodeState("node-med", "waiting", "Medication Agent");
+    setNodeState("node-social", "waiting", "Social Needs Agent");
+    setNodeState("node-edu", "waiting", "Education Agent");
+    setNodeState("node-coord", "waiting", "Care Coordinator");
+    setNodeState("node-doc", "waiting", "Documentation Agent");
+}
+
+async function animateFlowchart() {
+    const sequence = [
+        { nodes: [{id: "node-device", name: "Device Data Agent"}], duration: 1500 },
+        { nodes: [{id: "node-triage", name: "Risk Triage Agent"}], duration: 1500 },
+        { nodes: [ {id: "node-med", name: "Medication Agent"}, {id: "node-social", name: "Social Needs Agent"}, {id: "node-edu", name: "Education Agent"} ], duration: 2000 },
+        { nodes: [{id: "node-coord", name: "Care Coordinator"}], duration: 1500 },
+        { nodes: [{id: "node-doc", name: "Documentation Agent"}], duration: 1500 }
+    ];
+    for (const step of sequence) {
+        step.nodes.forEach(n => setNodeState(n.id, 'processing', n.name));
+        await new Promise(r => setTimeout(r, step.duration));
+        step.nodes.forEach(n => setNodeState(n.id, 'completed', n.name));
+    }
+}
+
+async function triggerAnalysis(patientId) {
+    const overlay = document.getElementById("aiOverlay");
+    overlay.classList.remove("hidden");
+    resetFlowchart();
+
+    const animPromise = animateFlowchart();
+
+    try {
+        const response = await fetch(`/api/analyze/${patientId}`, { method: "POST" });
+        if (!response.ok) throw new Error("Analysis failed");
+
+        await animPromise;
+        overlay.classList.add("hidden");
+
+        await loadPatientList();
+        loadPatientDetails(patientId, Array.from(document.querySelectorAll('.patient-card')).find(c => c.innerHTML.includes(patientId)));
+
+    } catch (error) {
+        alert("Failed to execute AI analysis.");
+        overlay.classList.add("hidden");
+    }
+}
+
+document.getElementById("openTraceBtn").addEventListener("click", function() {
+    const modal = document.getElementById("traceModal");
+    const content = document.getElementById("traceModalContent");
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+        content.classList.remove("scale-95", "opacity-0");
+        content.classList.add("scale-100", "opacity-100");
+    }, 10);
+});
+
+function closeTraceModal() {
+    const modal = document.getElementById("traceModal");
+    const content = document.getElementById("traceModalContent");
+    content.classList.remove("scale-100", "opacity-100");
+    content.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, 300);
+}
+
+document.getElementById("closeTraceBtn").addEventListener("click", closeTraceModal);
+document.getElementById("closeTraceBtnX").addEventListener("click", closeTraceModal);
+document.getElementById("traceModalBg").addEventListener("click", closeTraceModal);
+
+loadPatientList();
+</script>
+</body>
+</html>

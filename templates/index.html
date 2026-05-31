@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RuralCare AI | Patient Intake</title>
+<title>RuralCare | Remote Intake Portal</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    body {
-        font-family: 'Inter', sans-serif;
-    }
+    body { font-family: 'Inter', sans-serif; }
     .bloom-btn {
         box-shadow: 0 0 15px rgba(37, 99, 235, 0.4);
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -20,105 +18,45 @@
         box-shadow: 0 0 25px rgba(37, 99, 235, 0.7);
         transform: translateY(-2px);
     }
-    .bloom-error {
-        box-shadow: 0 0 25px rgba(220, 38, 38, 0.6);
-    }
     .glass-overlay {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.98);
         backdrop-filter: blur(12px);
-    }
-    .node-line-v {
-        width: 2px;
-        height: 24px;
-        background-color: #e2e8f0;
-        margin: 0 auto;
-    }
-    .node-line-h {
-        height: 2px;
-        width: 100%;
-        background-color: #e2e8f0;
     }
 </style>
 </head>
-<body class="bg-white text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
 
-<div id="loading" class="hidden fixed inset-0 glass-overlay z-50 flex flex-col items-center justify-center p-6 overflow-y-auto">
-    <div id="flowchart-container" class="w-full max-w-3xl flex flex-col items-center">
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Orchestrating Multi-Agent Workflow</h2>
-        <p class="text-slate-500 font-medium mb-10">Tracing real-time execution via Weights & Biases</p>
-
-        <div class="flex flex-col items-center w-full">
-            <div id="node-device"></div>
-            <div class="node-line-v"></div>
-
-            <div id="node-triage"></div>
-            <div class="node-line-v h-8"></div>
-
-            <div class="flex w-full max-w-lg justify-between items-center px-16">
-                <div class="node-line-h"></div>
-                <div class="node-line-h"></div>
-            </div>
-
-            <div class="flex w-full max-w-xl justify-between px-4">
-                <div class="node-line-v h-6"></div>
-                <div class="node-line-v h-6"></div>
-                <div class="node-line-v h-6"></div>
-            </div>
-
-            <div class="flex w-full max-w-2xl justify-between gap-4">
-                <div id="node-med" class="flex-1"></div>
-                <div id="node-social" class="flex-1"></div>
-                <div id="node-edu" class="flex-1"></div>
-            </div>
-
-            <div class="flex w-full max-w-xl justify-between px-4">
-                <div class="node-line-v h-6"></div>
-                <div class="node-line-v h-6"></div>
-                <div class="node-line-v h-6"></div>
-            </div>
-
-            <div class="flex w-full max-w-lg justify-between items-center px-16">
-                <div class="node-line-h"></div>
-                <div class="node-line-h"></div>
-            </div>
-
-            <div class="node-line-v h-8"></div>
-            <div id="node-coord"></div>
-
-            <div class="node-line-v"></div>
-            <div id="node-doc"></div>
-        </div>
+<div id="successOverlay" class="hidden fixed inset-0 glass-overlay z-50 flex flex-col items-center justify-center p-6">
+    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-6">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
     </div>
+    <h2 class="text-3xl font-bold text-slate-900 mb-2">Transmission Successful</h2>
+    <p class="text-slate-500 font-medium mb-10 text-center max-w-md">Your health data has been securely encrypted and transmitted to your care provider's database.</p>
+    <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-95">
+        Submit Another Record
+    </button>
+</div>
 
-    <div id="error-container" class="hidden w-full max-w-lg flex flex-col items-center bg-white border border-red-200 rounded-2xl p-8 bloom-error text-center">
-        <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        </div>
-        <h3 class="text-2xl font-bold text-slate-900 mb-2">Execution Failed</h3>
-        <p class="text-slate-600 font-medium mb-8">An error occurred while orchestrating the agent payload. Please check the backend console or Weights & Biases traces for rate limit details.</p>
-        <button type="button" id="closeErrorBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-8 py-3 rounded-xl font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95">
-            Return to Intake
-        </button>
-    </div>
+<div id="loadingOverlay" class="hidden fixed inset-0 glass-overlay z-50 flex flex-col items-center justify-center p-6">
+    <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mb-6"></div>
+    <h2 class="text-2xl font-bold text-slate-900 mb-2">Encrypting & Saving Data...</h2>
+    <p class="text-slate-500 font-medium">Connecting to secure health database.</p>
 </div>
 
 <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-6 py-5 flex items-center gap-3">
-        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">
-            R
-        </div>
-        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">RuralCare AI <span class="text-slate-400 font-medium text-lg ml-2">| Patient Intake</span></h1>
+        <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-md">R</div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight">RuralCare <span class="text-slate-400 font-medium text-lg ml-2">| Patient Connect Portal</span></h1>
     </div>
 </header>
 
-<main class="flex-grow max-w-7xl mx-auto px-6 py-10 w-full">
+<main class="flex-grow max-w-4xl mx-auto px-6 py-10 w-full">
     <form id="patientForm" class="space-y-8">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-                <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Patient Information</h2>
-                <div class="space-y-5">
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Patient Information</h2>
+            <div class="space-y-5">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Patient Name</label>
                         <input type="text" id="patient_name" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
@@ -127,130 +65,85 @@
                         <label class="block text-sm font-medium text-slate-700 mb-1">Patient ID</label>
                         <input type="text" id="patient_id" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Age</label>
-                            <input type="number" id="age" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Sex</label>
-                            <select id="sex" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                                <option>Female</option>
-                                <option>Male</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Age</label>
+                        <input type="number" id="age" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Rural Location / County</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Sex</label>
+                        <select id="sex" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                            <option>Female</option>
+                            <option>Male</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Location / County</label>
                         <input type="text" id="rural_location_county" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Caregiver Name</label>
                         <input type="text" id="caregiver_name" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Contact Method</label>
-                            <select id="preferred_contact_method" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                                <option>SMS</option>
-                                <option>Phone Call</option>
-                                <option>Mobile App</option>
-                                <option>Caregiver</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Connectivity</label>
-                            <select id="connectivity_status" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                                <option>Good</option>
-                                <option>Fair</option>
-                                <option>Poor</option>
-                                <option>Offline</option>
-                            </select>
-                        </div>
-                    </div>
                 </div>
-            </div>
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
-                <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Vital Signs</h2>
-                <div class="grid grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Weight</label>
-                        <input type="text" id="weight" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Blood Pressure</label>
-                        <input type="text" id="blood_pressure" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Heart Rate</label>
-                        <input type="text" id="heart_rate" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">SpO₂</label>
-                        <input type="text" id="spo2" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Glucose</label>
-                        <input type="text" id="glucose" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Temperature</label>
-                        <input type="text" id="temperature" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
-                    </div>
-                </div>
-
-                <h2 class="text-xl font-semibold text-slate-900 mt-10 mb-6 pb-2 border-b border-slate-100">Symptoms</h2>
                 <div class="grid grid-cols-2 gap-4">
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="shortness_of_breath" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Shortness of breath</span>
-                    </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="chest_pain" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Chest pain</span>
-                    </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="dizziness" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Dizziness</span>
-                    </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="swelling" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Swelling</span>
-                    </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="fatigue" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Fatigue</span>
-                    </label>
-                    <label class="flex items-center space-x-3 cursor-pointer group">
-                        <input type="checkbox" id="difficulty_sleeping_flat" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
-                        <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Difficulty sleeping flat</span>
-                    </label>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Contact Method</label>
+                        <select id="preferred_contact_method" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                            <option>SMS</option>
+                            <option>Phone Call</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Connectivity Status</label>
+                        <select id="connectivity_status" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
+                            <option>Good</option>
+                            <option>Fair</option>
+                            <option>Poor</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-
         </div>
 
-        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow">
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Vital Signs & Symptoms</h2>
+            <div class="grid grid-cols-3 gap-5 mb-8">
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Weight</label><input type="text" id="weight" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Blood Pressure</label><input type="text" id="blood_pressure" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Heart Rate</label><input type="text" id="heart_rate" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">SpO₂</label><input type="text" id="spo2" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Glucose</label><input type="text" id="glucose" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Temperature</label><input type="text" id="temperature" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 outline-none"></div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="shortness_of_breath" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Shortness of breath</span></label>
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="chest_pain" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Chest pain</span></label>
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="dizziness" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Dizziness</span></label>
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="swelling" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Swelling</span></label>
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="fatigue" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Fatigue</span></label>
+                <label class="flex items-center space-x-3 cursor-pointer group"><input type="checkbox" id="difficulty_sleeping_flat" class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all"><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors">Difficulty sleeping flat</span></label>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
             <h2 class="text-xl font-semibold text-slate-900 mb-6 pb-2 border-b border-slate-100">Notes & History</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Medication Notes</label>
-                    <textarea id="medication_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Additional Clinical Notes</label>
-                    <textarea id="additional_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"></textarea>
-                </div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-2">Medication Notes</label><textarea id="medication_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none resize-none"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-2">Additional Comments</label><textarea id="additional_notes" rows="4" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:border-blue-500 focus:bg-white outline-none resize-none"></textarea></div>
             </div>
         </div>
 
         <div class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 pb-12">
             <button type="submit" class="w-full sm:w-auto bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold bloom-btn text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 active:scale-95">
-                Send to Multiagent Model
+                Securely Submit Data
             </button>
-            <button type="button" id="fillTestDataBtn" class="w-full sm:w-auto bg-slate-100 text-slate-700 border border-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-200 transition-all text-lg focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 active:scale-95 shadow-sm hover:shadow">
+            <button type="button" id="fillTestDataBtn" class="w-full sm:w-auto bg-slate-100 text-slate-700 border border-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-200 transition-all text-lg focus:outline-none active:scale-95 shadow-sm hover:shadow">
                 Fill Demo Test Data
             </button>
         </div>
@@ -259,73 +152,9 @@
 </main>
 
 <script>
-const waitIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
-const spinIcon = `<svg class="animate-spin w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
-const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-
-function setNodeState(id, state, name) {
-    const el = document.getElementById(id);
-    const isSmall = id === 'node-med' || id === 'node-social' || id === 'node-edu';
-    const baseClass = "border-2 rounded-xl px-4 py-3 flex flex-col items-center justify-center transition-all duration-300 ";
-    const sizeClass = isSmall ? "w-full text-sm" : "w-64";
-
-    if (state === 'waiting') {
-        el.className = baseClass + sizeClass + " bg-white border-slate-200 shadow-sm";
-        el.innerHTML = `<div class="flex items-center gap-2 text-slate-400 font-semibold">${waitIcon} <span>${name}</span></div><span class="text-xs font-bold text-slate-400 mt-1">Waiting...</span>`;
-    } else if (state === 'processing') {
-        el.className = baseClass + sizeClass + " bg-blue-50 border-blue-400 scale-105 shadow-md";
-        el.innerHTML = `<div class="flex items-center gap-2 text-blue-700 font-semibold">${spinIcon} <span>${name}</span></div><span class="text-xs font-bold text-blue-600 mt-1">Processing Data...</span>`;
-    } else if (state === 'completed') {
-        el.className = baseClass + sizeClass + " bg-emerald-50 border-emerald-400 shadow-sm";
-        el.innerHTML = `<div class="flex items-center gap-2 text-emerald-700 font-semibold">${checkIcon} <span>${name}</span></div><span class="text-xs font-bold text-emerald-600 mt-1">Work Completed</span>`;
-    }
-}
-
-function resetFlowchart() {
-    setNodeState("node-device", "waiting", "Device Data Agent");
-    setNodeState("node-triage", "waiting", "Risk Triage Agent");
-    setNodeState("node-med", "waiting", "Medication Agent");
-    setNodeState("node-social", "waiting", "Social Needs Agent");
-    setNodeState("node-edu", "waiting", "Education Agent");
-    setNodeState("node-coord", "waiting", "Care Coordinator");
-    setNodeState("node-doc", "waiting", "Documentation Agent");
-}
-
-async function animateFlowchart() {
-    const sequence = [
-        { nodes: [{id: "node-device", name: "Device Data Agent"}], duration: 2500 },
-        { nodes: [{id: "node-triage", name: "Risk Triage Agent"}], duration: 2500 },
-        { nodes: [
-            {id: "node-med", name: "Medication Agent"},
-            {id: "node-social", name: "Social Needs Agent"},
-            {id: "node-edu", name: "Education Agent"}
-          ], duration: 3000 },
-        { nodes: [{id: "node-coord", name: "Care Coordinator"}], duration: 2500 },
-        { nodes: [{id: "node-doc", name: "Documentation Agent"}], duration: 2500 }
-    ];
-
-    for (const step of sequence) {
-        step.nodes.forEach(n => setNodeState(n.id, 'processing', n.name));
-        await new Promise(r => setTimeout(r, step.duration));
-        step.nodes.forEach(n => setNodeState(n.id, 'completed', n.name));
-    }
-}
-
-document.getElementById("closeErrorBtn").addEventListener("click", function() {
-    document.getElementById("loading").classList.add("hidden");
-    document.getElementById("error-container").classList.add("hidden");
-    document.getElementById("flowchart-container").classList.remove("hidden");
-    resetFlowchart();
-});
-
 document.getElementById("patientForm").addEventListener("submit", async function(event) {
     event.preventDefault();
-    document.getElementById("loading").classList.remove("hidden");
-    document.getElementById("error-container").classList.add("hidden");
-    document.getElementById("flowchart-container").classList.remove("hidden");
-
-    resetFlowchart();
-    animateFlowchart();
+    document.getElementById("loadingOverlay").classList.remove("hidden");
 
     const patientData = {
         patient_information: {
@@ -355,10 +184,7 @@ document.getElementById("patientForm").addEventListener("submit", async function
             difficulty_sleeping_flat: document.getElementById("difficulty_sleeping_flat").checked
         },
         medications: [{
-            medication_name: "Lisinopril",
-            dose: "20mg",
-            frequency: "Once daily",
-            missed_doses: "2"
+            medication_name: "Lisinopril", dose: "20mg", frequency: "Once daily", missed_doses: "2"
         }],
         notes: {
             medication_notes: document.getElementById("medication_notes").value,
@@ -372,20 +198,17 @@ document.getElementById("patientForm").addEventListener("submit", async function
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(patientData)
         });
+        if (!response.ok) throw new Error();
 
-        if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-
-        const result = await response.json();
-        if (result.redirect) {
-            window.location.href = result.redirect;
-        } else {
-            throw new Error("Invalid payload mapping returned.");
-        }
-    } catch (error) {
         setTimeout(() => {
-            document.getElementById("flowchart-container").classList.add("hidden");
-            document.getElementById("error-container").classList.remove("hidden");
-        }, 12500);
+            document.getElementById("loadingOverlay").classList.add("hidden");
+            document.getElementById("successOverlay").classList.remove("hidden");
+            document.getElementById("patientForm").reset();
+        }, 1500); // Artificial delay to show saving
+
+    } catch (error) {
+        alert("Failed to connect to the database.");
+        document.getElementById("loadingOverlay").classList.add("hidden");
     }
 });
 
