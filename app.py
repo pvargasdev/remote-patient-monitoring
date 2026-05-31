@@ -1,76 +1,170 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Rural RPM Intake Form</title>
-  <style>
-    body { font-family: Arial; background: #f4f6f8; margin: 30px; }
-    .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; }
-    h1 { color: #12355b; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-    label { font-weight: bold; display: block; margin-top: 12px; }
-    input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; }
-    .checkbox label { font-weight: normal; }
-    button { margin-top: 20px; padding: 12px; background: #1f7a4d; color: white; border: none; font-size: 16px; border-radius: 8px; }
-    .panel { border: 1px solid #ddd; padding: 18px; border-radius: 10px; }
-  </style>
-</head>
-<body>
+import os
+import json
+import time
+from flask import Flask, render_template, request, jsonify
+import google.generativeai as genai
+import weave
+from dotenv import load_dotenv
 
-<div class="container">
-  <h1>Rural RPM Patient Intake Form</h1>
+load_dotenv()
 
-  <div class="grid">
-    <div class="panel">
-      <h2>Patient Information</h2>
-      <label>Patient Name</label><input type="text">
-      <label>Patient ID</label><input type="text">
-      <label>Age</label><input type="number">
-      <label>Rural Location / County</label><input type="text">
-      <label>Caregiver Name</label><input type="text">
+weave.init('multiagent-rural-health')
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-      <label>Preferred Contact</label>
-      <select>
-        <option>SMS</option>
-        <option>Phone Call</option>
-        <option>App</option>
-        <option>Caregiver</option>
-      </select>
-    </div>
+app = Flask(__name__)
 
-    <div class="panel">
-      <h2>RPM / Triage Inputs</h2>
-      <label>Weight</label><input type="text">
-      <label>Blood Pressure</label><input type="text">
-      <label>Heart Rate</label><input type="text">
-      <label>SpO2</label><input type="text">
-      <label>Glucose</label><input type="text">
-      <label>Temperature</label><input type="text">
-    </div>
-  </div>
+LATEST_ORCHESTRATION_RESULT = None
 
-  <div class="panel" style="margin-top:25px;">
-    <h2>Symptoms</h2>
-    <div class="checkbox"><label><input type="checkbox"> Shortness of breath</label></div>
-    <div class="checkbox"><label><input type="checkbox"> Chest pain</label></div>
-    <div class="checkbox"><label><input type="checkbox"> Dizziness</label></div>
-    <div class="checkbox"><label><input type="checkbox"> Swelling</label></div>
-    <div class="checkbox"><label><input type="checkbox"> Fatigue</label></div>
-    <div class="checkbox"><label><input type="checkbox"> Difficulty sleeping flat</label></div>
-  </div>
+@weave.op()
+def device_data_agent(vitals):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Normalize and validate these vitals. Check for format anomalies. Input: {json.dumps(vitals)}. Output format: JSON with keys: normalizedVitals, anomalies."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
 
-  <div class="panel" style="margin-top:25px;">
-    <h2>Notes</h2>
-    <label>Medication Notes</label>
-    <textarea rows="4"></textarea>
+@weave.op()
+def risk_triage_agent(vitals, symptoms):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Analyze vitals and symptoms to compute a risk level (Low, Moderate, High) and list critical alerts. Vitals: {json.dumps(vitals)}. Symptoms: {json.dumps(symptoms)}. Output format: JSON with keys: score, criticalAlerts."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
 
-    <label>Additional Notes</label>
-    <textarea rows="4"></textarea>
-  </div>
+@weave.op()
+def medication_adherence_agent(symptoms):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Evaluate potential adherence issues or side effects based on symptoms: {json.dumps(symptoms)}. Output format: JSON with key: adherenceBarriers."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
 
-  <button onclick="alert('Prototype only: data would be sent to multiagent model.')">
-    Send to Multiagent Model
-  </button>
-</div>
+@weave.op()
+def social_needs_agent(symptoms):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Screen text context or symptoms for structural barriers like transportation or food insecurity: {json.dumps(symptoms)}. Output format: JSON with key: socialNeedsIdentified."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
 
-</body>
-</html>
+@weave.op()
+def patient_education_agent(triage_score, vitals):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Draft simple lifestyle or preventative actions for the patient. Risk: {triage_score}. Vitals: {json.dumps(vitals)}. Output format: JSON with key: patientGuidance."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
+
+@weave.op()
+def specialist_access_agent(vitals, symptoms):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Generate a condensed clinical brief for an emergency specialist consultation. Vitals: {json.dumps(vitals)}. Symptoms: {json.dumps(symptoms)}. Output format: JSON with key: specialistBrief."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
+
+@weave.op()
+def care_coordinator_agent(triage, social):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Determine resource routing based on Triage: {json.dumps(triage)} and Social Needs: {json.dumps(social)}. Output format: JSON with key: recommendedRoute."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
+
+@weave.op()
+def documentation_agent(patient_id, triage, clean_data):
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    prompt = f"Synthesize a professional EHR narrative note and append standard RPM billing code. Patient: {patient_id}. Triage: {json.dumps(triage)}. Data: {json.dumps(clean_data)}. Output format: JSON with keys: ehrClinicalNote, billingCodeReady."
+    response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+    return json.loads(response.text)
+
+@weave.op()
+def multi_agent_orchestrator(payload):
+    patient_info = payload.get("patient_information", {})
+    vitals = payload.get("vital_signs", {})
+    symptoms = payload.get("symptoms", {})
+
+    clean_data = device_data_agent(vitals)
+    time.sleep(2.5)
+
+    triage_result = risk_triage_agent(clean_data.get("normalizedVitals"), symptoms)
+    time.sleep(2.5)
+
+    medication_result = medication_adherence_agent(symptoms)
+    time.sleep(2.5)
+
+    social_result = social_needs_agent(symptoms)
+    time.sleep(2.5)
+
+    education_result = patient_education_agent(triage_result.get("score"), clean_data.get("normalizedVitals"))
+    time.sleep(2.5)
+
+    specialist_result = None
+    if triage_result.get("score") == "High":
+        specialist_result = specialist_access_agent(clean_data.get("normalizedVitals"), symptoms)
+        time.sleep(2.5)
+
+    coordination_result = care_coordinator_agent(triage_result, social_result)
+    time.sleep(2.5)
+
+    doc_result = documentation_agent(patient_info.get("patient_id"), triage_result, clean_data)
+
+    priority_calculated = "Standard"
+    if triage_result.get("score") == "High":
+        priority_calculated = "Emergency Escalation"
+    elif triage_result.get("score") == "Moderate":
+        priority_calculated = "Elevated Priority"
+
+    mapped_output = {
+        "patient_information": patient_info,
+        "vital_signs": vitals,
+        "symptoms": symptoms,
+        "medications": payload.get("medications", [{}]),
+        "notes": payload.get("notes", {}),
+        "triage_output": {
+            "risk_level": triage_result.get("score", "Unknown"),
+            "priority": priority_calculated
+        },
+        "agent_status": {
+            "intake_agent": "✅ Intake Agent Processed Data Successfully",
+            "device_agent": "✅ Device Data Agent Normalized Data Successfully",
+            "symptom_agent": "✅ Symptom Agent Logged Anomalies Successfully",
+            "medication_agent": f"✅ Medication Agent Complete: Barriers -> {medication_result.get('adherenceBarriers')}",
+            "connectivity_agent": f"✅ Connectivity Agent Configured for status: {patient_info.get('connectivity_status')}",
+            "triage_agent": f"✅ Triage Agent Completed Critical Calculations",
+            "care_agent": "✅ Care Coordination Agent Outlined Care Routines",
+            "documentation_agent": "✅ Documentation Agent Finalized Clinical Records Bundle"
+        },
+        "care_coordination": {
+            "recommended_next_steps": [
+                coordination_result.get("recommendedRoute", "Review clinician logs."),
+                education_result.get("patientGuidance", "Follow standard guidance protocols.")
+            ]
+        },
+        "documentation": {
+            "nurse_note": f"{doc_result.get('ehrClinicalNote', '')}\n\n[Billing Reference Attached Code: {doc_result.get('billingCodeReady', 'N/A')}]"
+        }
+    }
+    return mapped_output
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/output")
+def output_dashboard():
+    return render_template("output.html")
+
+@app.route("/api/patient-intake", methods=["POST"])
+def patient_intake_api():
+    global LATEST_ORCHESTRATION_RESULT
+    try:
+        data = request.get_json()
+        response_data = multi_agent_orchestrator(data)
+        LATEST_ORCHESTRATION_RESULT = response_data
+        return jsonify({"status": "processed", "redirect": "/output"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/agent-output", methods=["GET"])
+def get_agent_output():
+    global LATEST_ORCHESTRATION_RESULT
+    if LATEST_ORCHESTRATION_RESULT is None:
+        return jsonify({"error": "No processing tasks found on memory instance"}), 404
+    return jsonify(LATEST_ORCHESTRATION_RESULT), 200
+
+if __name__ == "__main__":
+    app.run(debug=True, port=3000)

@@ -46,7 +46,8 @@ h2 {
 }
 
 .waiting {
-    color: #777;
+    color: #1e293b;
+    font-weight: bold;
 }
 
 .alert-box {
@@ -63,6 +64,8 @@ h2 {
     padding: 10px;
     border-radius: 8px;
     margin: 8px 0;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .button-row {
@@ -94,6 +97,7 @@ pre {
     background: #f6f6f6;
     padding: 12px;
     border-radius: 8px;
+    font-family: monospace;
 }
 </style>
 </head>
@@ -210,6 +214,8 @@ pre {
 async function loadAgentOutput() {
     try {
         const response = await fetch("/api/agent-output");
+        if (!response.ok) return;
+
         const data = await response.json();
 
         const p = data.patient_information || {};
@@ -239,12 +245,12 @@ async function loadAgentOutput() {
         document.getElementById("glucose").textContent = v.glucose || "";
         document.getElementById("temperature").textContent = v.temperature || "";
 
-        document.getElementById("shortness_of_breath").textContent = s.shortness_of_breath;
-        document.getElementById("chest_pain").textContent = s.chest_pain;
-        document.getElementById("dizziness").textContent = s.dizziness;
-        document.getElementById("swelling").textContent = s.swelling;
-        document.getElementById("fatigue").textContent = s.fatigue;
-        document.getElementById("difficulty_sleeping_flat").textContent = s.difficulty_sleeping_flat;
+        document.getElementById("shortness_of_breath").textContent = s.shortness_of_breath ? "Yes" : "No";
+        document.getElementById("chest_pain").textContent = s.chest_pain ? "Yes" : "No";
+        document.getElementById("dizziness").textContent = s.dizziness ? "Yes" : "No";
+        document.getElementById("swelling").textContent = s.swelling ? "Yes" : "No";
+        document.getElementById("fatigue").textContent = s.fatigue ? "Yes" : "No";
+        document.getElementById("difficulty_sleeping_flat").textContent = s.difficulty_sleeping_flat ? "Yes" : "No";
 
         document.getElementById("medication_name").textContent = m.medication_name || "";
         document.getElementById("dose").textContent = m.dose || "";
@@ -257,22 +263,21 @@ async function loadAgentOutput() {
         document.getElementById("risk_level").textContent = triage.risk_level || "";
         document.getElementById("priority").textContent = triage.priority || "";
 
-        document.getElementById("intake_agent").textContent = agents.intake_agent || "⏳ Intake Agent Waiting...";
-        document.getElementById("device_agent").textContent = agents.device_agent || "⏳ Device Data Agent Waiting...";
-        document.getElementById("symptom_agent").textContent = agents.symptom_agent || "⏳ Symptom Agent Waiting...";
-        document.getElementById("medication_agent").textContent = agents.medication_agent || "⏳ Medication Agent Waiting...";
-        document.getElementById("connectivity_agent").textContent = agents.connectivity_agent || "⏳ Connectivity Agent Waiting...";
-        document.getElementById("triage_agent").textContent = agents.triage_agent || "⏳ Triage Agent Waiting...";
-        document.getElementById("care_agent").textContent = agents.care_agent || "⏳ Care Coordination Agent Waiting...";
-        document.getElementById("documentation_agent").textContent = agents.documentation_agent || "⏳ Documentation Agent Waiting...";
+        document.getElementById("intake_agent").textContent = agents.intake_agent || "";
+        document.getElementById("device_agent").textContent = agents.device_agent || "";
+        document.getElementById("symptom_agent").textContent = agents.symptom_agent || "";
+        document.getElementById("medication_agent").textContent = agents.medication_agent || "";
+        document.getElementById("connectivity_agent").textContent = agents.connectivity_agent || "";
+        document.getElementById("triage_agent").textContent = agents.triage_agent || "";
+        document.getElementById("care_agent").textContent = agents.care_agent || "";
+        document.getElementById("documentation_agent").textContent = agents.documentation_agent || "";
 
         const steps = care.recommended_next_steps || [];
         document.getElementById("next_steps").innerHTML = steps
             .map(step => `<li>${step}</li>`)
             .join("");
 
-        document.getElementById("documentation_note").textContent =
-            documentation.nurse_note || "";
+        document.getElementById("documentation_note").textContent = documentation.nurse_note || "";
 
     } catch (error) {
         console.log("Waiting for API data...", error);

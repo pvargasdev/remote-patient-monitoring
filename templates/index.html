@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Rural RPM Patient Intake Form</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f8;
+    margin:0;
+    padding:0;
+}
+
+.header{
+    background:#12355b;
+    color:white;
+    padding:20px;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+}
+
+.container{
+    width:95%;
+    margin:auto;
+    margin-top:20px;
+}
+
+.row{
+    display:flex;
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:10px;
+    padding:20px;
+    flex:1;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.card h2{
+    color:#12355b;
+}
+
+label{
+    display:block;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:4px;
+    box-sizing: border-box;
+}
+
+select{
+    width:100%;
+    padding:10px;
+    margin-top:4px;
+    box-sizing: border-box;
+}
+
+textarea{
+    width:100%;
+    padding:10px;
+    margin-top:4px;
+    box-sizing: border-box;
+}
+
+.symptoms{
+    background:white;
+    border-radius:10px;
+    padding:20px;
+    margin-top:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.notes{
+    background:white;
+    border-radius:10px;
+    padding:20px;
+    margin-top:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.button-area{
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top:25px;
+    margin-bottom:30px;
+}
+
+button{
+    background:#1f7a4d;
+    color:white;
+    border:none;
+    padding:15px 40px;
+    font-size:18px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#155a39;
+}
+
+.dev-btn {
+    background: #475569;
+}
+
+.dev-btn:hover {
+    background: #334155;
+}
+
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(18, 53, 91, 0.85);
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 20%;
+    z-index: 1000;
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading" class="loading-overlay">
+    Orchestrating 8 Multi-Agent System Ecosystem Logs...<br>
+    Running Evaluators & Piping Metrics to Weights & Biases Dashboard...
+</div>
+
+<div class="header">
+    Rural RPM Patient Intake Form
+</div>
+
+<div class="container">
+
+<form id="patientForm">
+
+    <div class="row">
+
+        <div class="card">
+
+            <h2>Patient Information</h2>
+
+            <label>Patient Name</label>
+            <input type="text" id="patient_name">
+
+            <label>Patient ID</label>
+            <input type="text" id="patient_id">
+
+            <label>Age</label>
+            <input type="number" id="age">
+
+            <label>Sex</label>
+            <select id="sex">
+                <option>Female</option>
+                <option>Male</option>
+                <option>Other</option>
+            </select>
+
+            <label>Rural Location / County</label>
+            <input type="text" id="rural_location_county">
+
+            <label>Caregiver Name</label>
+            <input type="text" id="caregiver_name">
+
+            <label>Preferred Contact Method</label>
+            <select id="preferred_contact_method">
+                <option>SMS</option>
+                <option>Phone Call</option>
+                <option>Mobile App</option>
+                <option>Caregiver</option>
+            </select>
+
+            <label>Connectivity Status</label>
+            <select id="connectivity_status">
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+                <option>Offline</option>
+            </select>
+
+        </div>
+
+        <div class="card">
+
+            <h2>RPM / Triage Inputs</h2>
+
+            <label>Weight</label>
+            <input type="text" id="weight">
+
+            <label>Blood Pressure</label>
+            <input type="text" id="blood_pressure">
+
+            <label>Heart Rate</label>
+            <input type="text" id="heart_rate">
+
+            <label>SpO₂</label>
+            <input type="text" id="spo2">
+
+            <label>Glucose</label>
+            <input type="text" id="glucose">
+
+            <label>Temperature</label>
+            <input type="text" id="temperature">
+
+        </div>
+
+    </div>
+
+    <div class="symptoms">
+
+        <h2>Symptoms</h2>
+
+        <input type="checkbox" id="shortness_of_breath"> Shortness of breath<br><br>
+        <input type="checkbox" id="chest_pain"> Chest pain<br><br>
+        <input type="checkbox" id="dizziness"> Dizziness<br><br>
+        <input type="checkbox" id="swelling"> Swelling<br><br>
+        <input type="checkbox" id="fatigue"> Fatigue<br><br>
+        <input type="checkbox" id="difficulty_sleeping_flat"> Difficulty sleeping flat<br><br>
+
+    </div>
+
+    <div class="notes">
+
+        <h2>Medication Notes</h2>
+
+        <textarea rows="5" id="medication_notes"></textarea>
+
+        <h2>Additional Notes</h2>
+
+        <textarea rows="5" id="additional_notes"></textarea>
+
+    </div>
+
+    <div class="button-area">
+        <button type="submit">
+            Send to Multiagent Model
+        </button>
+        <button type="button" class="dev-btn" id="fillTestDataBtn">
+            Fill Demo Test Data
+        </button>
+    </div>
+
+</form>
+
+</div>
+
+<script>
+document.getElementById("patientForm").addEventListener("submit", async function(event) {
+    event.preventDefault();
+    document.getElementById("loading").style.display = "block";
+
+    const patientData = {
+        patient_information: {
+            patient_name: document.getElementById("patient_name").value,
+            patient_id: document.getElementById("patient_id").value,
+            age: document.getElementById("age").value,
+            sex: document.getElementById("sex").value,
+            rural_location_county: document.getElementById("rural_location_county").value,
+            caregiver_name: document.getElementById("caregiver_name").value,
+            preferred_contact_method: document.getElementById("preferred_contact_method").value,
+            connectivity_status: document.getElementById("connectivity_status").value
+        },
+        vital_signs: {
+            weight: document.getElementById("weight").value,
+            blood_pressure: document.getElementById("blood_pressure").value,
+            heart_rate: document.getElementById("heart_rate").value,
+            spo2: document.getElementById("spo2").value,
+            glucose: document.getElementById("glucose").value,
+            temperature: document.getElementById("temperature").value
+        },
+        symptoms: {
+            shortness_of_breath: document.getElementById("shortness_of_breath").checked,
+            chest_pain: document.getElementById("chest_pain").checked,
+            dizziness: document.getElementById("dizziness").checked,
+            swelling: document.getElementById("swelling").checked,
+            fatigue: document.getElementById("fatigue").checked,
+            difficulty_sleeping_flat: document.getElementById("difficulty_sleeping_flat").checked
+        },
+        medications: [
+            {
+                medication_name: "Lisinopril",
+                dose: "20mg",
+                frequency: "Once daily",
+                missed_doses: "2"
+            }
+        ],
+        notes: {
+            medication_notes: document.getElementById("medication_notes").value,
+            additional_notes: document.getElementById("additional_notes").value
+        }
+    };
+
+    try {
+        const response = await fetch("/api/patient-intake", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patientData)
+        });
+        const result = await response.json();
+        if (result.redirect) {
+            window.location.href = result.redirect;
+        }
+    } catch (error) {
+        alert("Execution Error: Check backend terminal logs.");
+        document.getElementById("loading").style.display = "none";
+    }
+});
+
+document.getElementById("fillTestDataBtn").addEventListener("click", function() {
+    document.getElementById("patient_name").value = "João da Silva";
+    document.getElementById("patient_id").value = "RUR-9021";
+    document.getElementById("age").value = "68";
+    document.getElementById("sex").value = "Male";
+    document.getElementById("rural_location_county").value = "Cuiabá Rural";
+    document.getElementById("caregiver_name").value = "Maria da Silva";
+    document.getElementById("preferred_contact_method").value = "SMS";
+    document.getElementById("connectivity_status").value = "Fair";
+
+    document.getElementById("weight").value = "85 kg";
+    document.getElementById("blood_pressure").value = "165/102";
+    document.getElementById("heart_rate").value = "94";
+    document.getElementById("spo2").value = "91%";
+    document.getElementById("glucose").value = "178";
+    document.getElementById("temperature").value = "37.4";
+
+    document.getElementById("shortness_of_breath").checked = true;
+    document.getElementById("chest_pain").checked = false;
+    document.getElementById("dizziness").checked = true;
+    document.getElementById("swelling").checked = false;
+    document.getElementById("fatigue").checked = true;
+    document.getElementById("difficulty_sleeping_flat").checked = true;
+
+    document.getElementById("medication_notes").value = "Ficou sem os remédios de pressão desde sexta-feira. Não conseguiu transporte para ir buscar a medicação de alto custo no posto central urbano.";
+    document.getElementById("additional_notes").value = "Apresenta quadro persistente de cansaço agudo, picos pressóricos noturnos e cefaleia occipital constante.";
+});
+</script>
+
+</body>
+</html>
