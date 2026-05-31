@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Rural RPM Nurse Output Dashboard</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background: #12355b;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.container {
+    width: 95%;
+    margin: 20px auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+h2 {
+    color: #12355b;
+    margin-top: 0;
+}
+
+.waiting {
+    color: #777;
+}
+
+.alert-box {
+    background: #fff3f3;
+    border: 1px solid #ffb4b4;
+    color: #b00020;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.agent {
+    background: #f1f5f9;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 8px 0;
+}
+
+.button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+button {
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.primary {
+    background: #1f7a4d;
+    color: white;
+}
+
+.secondary {
+    background: #e8eef8;
+    color: #12355b;
+}
+
+pre {
+    white-space: pre-wrap;
+    background: #f6f6f6;
+    padding: 12px;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    Rural RPM Nurse Output Dashboard
+</div>
+
+<div class="container">
+
+    <div class="grid">
+
+        <div>
+
+            <div class="card">
+                <h2>Nurse Alert</h2>
+                <div class="alert-box">
+                    Risk Level:
+                    <span id="risk_level" class="waiting">Waiting for Triage Agent...</span>
+                    <br>
+                    Priority:
+                    <span id="priority" class="waiting">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Patient Summary</h2>
+                <p><b>Name:</b> <span id="patient_name" class="waiting">Waiting...</span></p>
+                <p><b>Patient ID:</b> <span id="patient_id" class="waiting">Waiting...</span></p>
+                <p><b>Age:</b> <span id="age" class="waiting">Waiting...</span></p>
+                <p><b>Sex:</b> <span id="sex" class="waiting">Waiting...</span></p>
+                <p><b>Rural Location / County:</b> <span id="location" class="waiting">Waiting...</span></p>
+                <p><b>Caregiver:</b> <span id="caregiver" class="waiting">Waiting...</span></p>
+                <p><b>Preferred Contact:</b> <span id="preferred_contact" class="waiting">Waiting...</span></p>
+                <p><b>Connectivity:</b> <span id="connectivity" class="waiting">Waiting...</span></p>
+            </div>
+
+            <div class="card">
+                <h2>Vital Signs</h2>
+                <p><b>Weight:</b> <span id="weight" class="waiting">--</span></p>
+                <p><b>Blood Pressure:</b> <span id="blood_pressure" class="waiting">--</span></p>
+                <p><b>Heart Rate:</b> <span id="heart_rate" class="waiting">--</span></p>
+                <p><b>SpO₂:</b> <span id="spo2" class="waiting">--</span></p>
+                <p><b>Glucose:</b> <span id="glucose" class="waiting">--</span></p>
+                <p><b>Temperature:</b> <span id="temperature" class="waiting">--</span></p>
+            </div>
+
+            <div class="card">
+                <h2>Symptoms Reported</h2>
+                <p><b>Shortness of breath:</b> <span id="shortness_of_breath" class="waiting">Waiting...</span></p>
+                <p><b>Chest pain:</b> <span id="chest_pain" class="waiting">Waiting...</span></p>
+                <p><b>Dizziness:</b> <span id="dizziness" class="waiting">Waiting...</span></p>
+                <p><b>Swelling:</b> <span id="swelling" class="waiting">Waiting...</span></p>
+                <p><b>Fatigue:</b> <span id="fatigue" class="waiting">Waiting...</span></p>
+                <p><b>Difficulty sleeping flat:</b> <span id="difficulty_sleeping_flat" class="waiting">Waiting...</span></p>
+            </div>
+
+            <div class="card">
+                <h2>Medication & Notes</h2>
+                <p><b>Medication Name:</b> <span id="medication_name" class="waiting">Waiting...</span></p>
+                <p><b>Dose:</b> <span id="dose" class="waiting">Waiting...</span></p>
+                <p><b>Frequency:</b> <span id="frequency" class="waiting">Waiting...</span></p>
+                <p><b>Missed Doses:</b> <span id="missed_doses" class="waiting">Waiting...</span></p>
+                <p><b>Medication Notes:</b> <span id="medication_notes" class="waiting">Waiting...</span></p>
+                <p><b>Additional Notes:</b> <span id="additional_notes" class="waiting">Waiting...</span></p>
+            </div>
+
+        </div>
+
+        <div>
+
+            <div class="card">
+                <h2>Agent Information Received</h2>
+                <div class="agent" id="intake_agent">⏳ Intake Agent Waiting...</div>
+                <div class="agent" id="device_agent">⏳ Device Data Agent Waiting...</div>
+                <div class="agent" id="symptom_agent">⏳ Symptom Agent Waiting...</div>
+                <div class="agent" id="medication_agent">⏳ Medication Agent Waiting...</div>
+                <div class="agent" id="connectivity_agent">⏳ Connectivity Agent Waiting...</div>
+                <div class="agent" id="triage_agent">⏳ Triage Agent Waiting...</div>
+                <div class="agent" id="care_agent">⏳ Care Coordination Agent Waiting...</div>
+                <div class="agent" id="documentation_agent">⏳ Documentation Agent Waiting...</div>
+            </div>
+
+            <div class="card">
+                <h2>Recommended Next Steps</h2>
+                <ul id="next_steps">
+                    <li class="waiting">Waiting for Care Coordination Agent...</li>
+                </ul>
+
+                <div class="button-row">
+                    <button class="primary">Call Patient</button>
+                    <button class="secondary">Add Note to EHR</button>
+                </div>
+
+                <div class="button-row">
+                    <button class="secondary">Escalate to Provider</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Documentation Agent Draft</h2>
+                <pre id="documentation_note" class="waiting">Waiting for Documentation Agent...</pre>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+async function loadAgentOutput() {
+    try {
+        const response = await fetch("/api/agent-output");
+        const data = await response.json();
+
+        const p = data.patient_information || {};
+        const v = data.vital_signs || {};
+        const s = data.symptoms || {};
+        const meds = data.medications || [{}];
+        const m = meds[0] || {};
+        const n = data.notes || {};
+        const triage = data.triage_output || {};
+        const agents = data.agent_status || {};
+        const care = data.care_coordination || {};
+        const documentation = data.documentation || {};
+
+        document.getElementById("patient_name").textContent = p.patient_name || "";
+        document.getElementById("patient_id").textContent = p.patient_id || "";
+        document.getElementById("age").textContent = p.age || "";
+        document.getElementById("sex").textContent = p.sex || "";
+        document.getElementById("location").textContent = p.rural_location_county || "";
+        document.getElementById("caregiver").textContent = p.caregiver_name || "";
+        document.getElementById("preferred_contact").textContent = p.preferred_contact_method || "";
+        document.getElementById("connectivity").textContent = p.connectivity_status || "";
+
+        document.getElementById("weight").textContent = v.weight || "";
+        document.getElementById("blood_pressure").textContent = v.blood_pressure || "";
+        document.getElementById("heart_rate").textContent = v.heart_rate || "";
+        document.getElementById("spo2").textContent = v.spo2 || "";
+        document.getElementById("glucose").textContent = v.glucose || "";
+        document.getElementById("temperature").textContent = v.temperature || "";
+
+        document.getElementById("shortness_of_breath").textContent = s.shortness_of_breath;
+        document.getElementById("chest_pain").textContent = s.chest_pain;
+        document.getElementById("dizziness").textContent = s.dizziness;
+        document.getElementById("swelling").textContent = s.swelling;
+        document.getElementById("fatigue").textContent = s.fatigue;
+        document.getElementById("difficulty_sleeping_flat").textContent = s.difficulty_sleeping_flat;
+
+        document.getElementById("medication_name").textContent = m.medication_name || "";
+        document.getElementById("dose").textContent = m.dose || "";
+        document.getElementById("frequency").textContent = m.frequency || "";
+        document.getElementById("missed_doses").textContent = m.missed_doses || "";
+
+        document.getElementById("medication_notes").textContent = n.medication_notes || "";
+        document.getElementById("additional_notes").textContent = n.additional_notes || "";
+
+        document.getElementById("risk_level").textContent = triage.risk_level || "";
+        document.getElementById("priority").textContent = triage.priority || "";
+
+        document.getElementById("intake_agent").textContent = agents.intake_agent || "⏳ Intake Agent Waiting...";
+        document.getElementById("device_agent").textContent = agents.device_agent || "⏳ Device Data Agent Waiting...";
+        document.getElementById("symptom_agent").textContent = agents.symptom_agent || "⏳ Symptom Agent Waiting...";
+        document.getElementById("medication_agent").textContent = agents.medication_agent || "⏳ Medication Agent Waiting...";
+        document.getElementById("connectivity_agent").textContent = agents.connectivity_agent || "⏳ Connectivity Agent Waiting...";
+        document.getElementById("triage_agent").textContent = agents.triage_agent || "⏳ Triage Agent Waiting...";
+        document.getElementById("care_agent").textContent = agents.care_agent || "⏳ Care Coordination Agent Waiting...";
+        document.getElementById("documentation_agent").textContent = agents.documentation_agent || "⏳ Documentation Agent Waiting...";
+
+        const steps = care.recommended_next_steps || [];
+        document.getElementById("next_steps").innerHTML = steps
+            .map(step => `<li>${step}</li>`)
+            .join("");
+
+        document.getElementById("documentation_note").textContent =
+            documentation.nurse_note || "";
+
+    } catch (error) {
+        console.log("Waiting for API data...", error);
+    }
+}
+
+loadAgentOutput();
+setInterval(loadAgentOutput, 3000);
+</script>
+
+</body>
+</html>
